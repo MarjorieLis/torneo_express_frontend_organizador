@@ -11,6 +11,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _loading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -38,32 +39,50 @@ class _LoginScreenState extends State<LoginScreen> {
                 validator: (value) => value!.isEmpty ? "Requerido" : null,
               ),
               SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    final success = await AuthService.login(
-                      _emailController.text,
-                      _passwordController.text,
-                    );
-                    if (success) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => HomeOrganizadorScreen()),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Credenciales incorrectas")),
-                      );
-                    }
-                  }
-                },
-                child: Text("Ingresar"),
-              ),
+              _loading
+                  ? CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _iniciarSesion,
+                      child: Text("Ingresar"),
+                    ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _iniciarSesion() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() => _loading = true);
+
+      final result = await AuthService.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+
+      setState(() => _loading = false);
+
+      if (result['success'] == true) {
+        final String rol = result['rol'];
+
+        if (rol == 'organizador') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomeOrganizadorScreen()),
+          );
+        } else {
+          // Si el usuario no es organizador
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Acceso denegado. Solo organizadores.")),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'])),
+        );
+      }
+    }
   }
 
   @override
