@@ -9,7 +9,7 @@ class WelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Bienvenido a Torneo Express"),
+        title: Text("Bienvenido"),
         backgroundColor: Theme.of(context).primaryColor,
       ),
       body: Center(
@@ -17,7 +17,7 @@ class WelcomeScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              "Organizador UIDE",
+              "Torneo Express UIDE",
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 40),
@@ -28,7 +28,7 @@ class WelcomeScreen extends StatelessWidget {
             SizedBox(height: 10),
             TextButton(
               onPressed: () => Navigator.pushNamed(context, Routes.register),
-              child: Text("Registrarse como Organizador"),
+              child: Text("Registrarse"),
             ),
           ],
         ),
