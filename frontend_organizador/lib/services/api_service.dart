@@ -44,6 +44,19 @@ class ApiService {
   }
 }
 
+static Future<Map<String, dynamic>> editarTorneo(String id, Map<String, dynamic> data) async {
+  final token = await AuthService.getToken();
+  final response = await http.put(
+    Uri.parse('$baseUrl/torneos/$id'),
+    headers: {
+      'Content-Type': 'application/json',
+      'x-auth-token': token!,
+    },
+    body: jsonEncode(data),
+  );
+  return jsonDecode(response.body);
+}
+
   static Future<List<dynamic>> getEquiposPorEstado(String estado) async {
   final response = await http.get(Uri.parse('$baseUrl/equipos?estado=$estado'));
   if (response.statusCode == 200) {
