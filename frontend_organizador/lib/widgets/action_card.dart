@@ -4,15 +4,16 @@ import 'package:flutter/material.dart';
 class ActionCard extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String routeName;
+  final WidgetBuilder builder; // Cambiado a WidgetBuilder
 
-  ActionCard({required this.icon, required this.label, required this.routeName});
+  ActionCard({required this.icon, required this.label, required this.builder});
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      elevation: 4,
       child: InkWell(
-        onTap: () => Navigator.pushNamed(context, routeName),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: builder)),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

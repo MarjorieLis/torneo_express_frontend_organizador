@@ -6,6 +6,10 @@ import 'package:frontend_organizador/screens/organizador/notificaciones_screen.d
 import 'package:frontend_organizador/screens/organizador/estadisticas_screen.dart';
 import 'package:frontend_organizador/screens/organizador/programar_partidos_screen.dart';
 import 'package:frontend_organizador/widgets/tournament_card.dart';
+import 'package:frontend_organizador/services/auth_service.dart';
+import 'package:frontend_organizador/utils/routes.dart';
+
+
 
 class HomeOrganizadorScreen extends StatelessWidget {
   @override
@@ -22,7 +26,13 @@ class HomeOrganizadorScreen extends StatelessWidget {
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(child: Text("Organizador UIDE")),
-            ListTile(title: Text("Cerrar sesión"), onTap: () {}),
+            ListTile(
+              title: Text("Cerrar sesión"),
+              onTap: () async {
+                await AuthService.logout();
+                Navigator.pushNamedAndRemoveUntil(context, Routes.welcome, (route) => false);
+        },
+        ),
           ],
         ),
       ),

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_organizador/services/auth_service.dart';
 import 'package:frontend_organizador/utils/validators.dart';
+import 'package:frontend_organizador/screens/organizador/home_organizador_screen.dart';
 
 class RegisterOrganizadorScreen extends StatefulWidget {
   @override
@@ -19,9 +20,7 @@ class _RegisterOrganizadorScreenState extends State<RegisterOrganizadorScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Registro de Organizador"),
-      ),
+      appBar: AppBar(title: Text("Registro de Organizador")),
       body: Padding(
         padding: EdgeInsets.all(20),
         child: Form(
@@ -95,22 +94,32 @@ class _RegisterOrganizadorScreenState extends State<RegisterOrganizadorScreen> {
 
       try {
         final response = await AuthService.register(data);
+
+        setState(() => _loading = false);
+
         if (response['success'] == true) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Registrado. Inicia sesión")),
+            SnackBar(content: Text("✅ Registrado e iniciado sesión")),
           );
-          Navigator.popUntil(context, ModalRoute.withName('/login'));
+
+          // ✅ REDIRECCIÓN SEGURA AL HOME
+          if (mounted) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => HomeOrganizadorScreen()),
+              (route) => false,
+            );
+          }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(response['message'])),
+            SnackBar(content: Text(response['message'] ?? "Error")),
           );
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error de conexión")),
-        );
-      } finally {
         setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error de conexión. Verifica tu red.")),
+        );
       }
     }
   }

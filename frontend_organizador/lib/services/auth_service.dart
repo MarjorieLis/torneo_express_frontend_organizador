@@ -1,9 +1,9 @@
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  static const String baseUrl = 'http://192.168.0.10:3000/api'; // Cambia si es necesario
+  static const String baseUrl = 'http://192.168.0.10:3000/api'; // Asegúrate de que esta IP sea correcta
 
   // Registro de usuario
   static Future<Map<String, dynamic>> register(Map<String, dynamic> userData) async {
@@ -13,14 +13,18 @@ class AuthService {
       body: jsonEncode(userData),
     );
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      return {
-        'success': false,
-        'message': jsonDecode(response.body)['message'] ?? 'Error en el registro',
-      };
+    final data = jsonDecode(response.body);
+
+    // ✅ GUARDAR TOKEN Y DATOS SI EL REGISTRO ES EXITOSO
+    if (response.statusCode == 201 && data['success'] == true) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', data['token']);
+      await prefs.setString('usuario_rol', data['usuario']['rol']);
+      await prefs.setString('usuario_nombre', data['usuario']['nombre']);
+      await prefs.setString('usuario_email', data['usuario']['email']);
     }
+
+    return data;
   }
 
   // Inicio de sesión
@@ -34,13 +38,11 @@ class AuthService {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
 
-      // Asegurarse de que el backend devuelva el rol
       final String rol = data['usuario']['rol'] ?? '';
       final String token = data['token'];
       final String nombre = data['usuario']['nombre'];
       final String email = data['usuario']['email'];
 
-      // Guardar en SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', token);
       await prefs.setString('usuario_rol', rol);
@@ -82,5 +84,11 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     return token != null;
+  }
+
+  // Obtener token
+  static Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
   }
 }
