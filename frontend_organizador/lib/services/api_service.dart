@@ -25,13 +25,24 @@ class ApiService {
 }
 
   static Future<List<Torneo>> getTorneos() async {
-    final response = await http.get(Uri.parse('$baseUrl/torneos'));
-    if (response.statusCode == 200) {
-      final List jsonList = jsonDecode(response.body);
-      return jsonList.map((json) => Torneo.fromJson(json)).toList();
-    }
+  final token = await AuthService.getToken();
+  final response = await http.get(
+    Uri.parse('$baseUrl/torneos'),
+    headers: {
+      'x-auth-token': token!, 
+    },
+  );
+  
+  final result = jsonDecode(response.body);
+  print('🔍 Respuesta /torneos: $result'); 
+  if (response.statusCode == 200 && result['success'] == true) {
+    final List jsonList = result['torneos'];
+    return jsonList.map((json) => Torneo.fromJson(json)).toList();
+  } else {
+    print('❌ Error: ${result['message'] ?? 'Desconocido'}');
     return [];
   }
+}
 
   static Future<List<dynamic>> getEquiposPorEstado(String estado) async {
   final response = await http.get(Uri.parse('$baseUrl/equipos?estado=$estado'));

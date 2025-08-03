@@ -10,8 +10,6 @@ import 'package:frontend_organizador/services/auth_service.dart';
 import 'package:frontend_organizador/utils/routes.dart';
 import 'package:frontend_organizador/screens/organizador/torneos_screen.dart';
 
-
-
 class HomeOrganizadorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
