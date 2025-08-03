@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'utils/routes.dart';
 import 'services/auth_service.dart';
 
@@ -13,7 +14,7 @@ void main() async {
   // ✅ Si NO, va a la pantalla de bienvenida
   final initialRoute = isLoggedIn && rol == 'organizador'
       ? Routes.home
-      : Routes.welcome; // ← Asegúrate de que esta sea la ruta correcta
+      : Routes.welcome;
 
   runApp(MyApp(initialRoute: initialRoute));
 }
@@ -31,6 +32,15 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.grey[100],
       ),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('es', 'ES'),
+      ],
+      locale: const Locale('es', 'ES'),
       initialRoute: initialRoute,
       routes: Routes.routes,
       debugShowCheckedModeBanner: false,

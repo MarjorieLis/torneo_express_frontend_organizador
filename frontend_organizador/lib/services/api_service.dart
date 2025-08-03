@@ -1,21 +1,28 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:frontend_organizador/services/auth_service.dart';
 
 //Importar los modelos
 import '../models/torneo.dart';
 import '../models/partido.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:3000/api';
+  static const String baseUrl = 'http://192.168.0.10:3000/api';
 
   static Future<Map<String, dynamic>> crearTorneo(Map<String, dynamic> data) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/torneos'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(data),
-    );
-    return jsonDecode(response.body);
-  }
+  final token = await AuthService.getToken();
+  final response = await http.post(
+    Uri.parse('$baseUrl/torneos'),
+    headers: {
+      'Content-Type': 'application/json',
+      'x-auth-token': token!,
+    },
+    body: jsonEncode(data),
+  );
+
+  final result = jsonDecode(response.body);
+  return result;
+}
 
   static Future<List<Torneo>> getTorneos() async {
     final response = await http.get(Uri.parse('$baseUrl/torneos'));
