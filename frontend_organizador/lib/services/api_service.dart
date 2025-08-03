@@ -83,4 +83,28 @@ static Future<List<dynamic>> getTorneosPasados() async {
   }
   return [];
 }
+
+static Future<Map<String, dynamic>> suspenderTorneo(String id) async {
+  final token = await AuthService.getToken();
+  final response = await http.put(
+    Uri.parse('$baseUrl/torneos/$id/suspender'),
+    headers: {
+      'Content-Type': 'application/json',
+      'x-auth-token': token!,
+    },
+  );
+  return jsonDecode(response.body);
+}
+
+static Future<Map<String, dynamic>> cancelarTorneo(String id) async {
+  final token = await AuthService.getToken();
+  final response = await http.put(
+    Uri.parse('$baseUrl/torneos/$id/cancelar'),
+    headers: {
+      'Content-Type': 'application/json',
+      'x-auth-token': token!,
+    },
+  );
+  return jsonDecode(response.body);
+}
 }

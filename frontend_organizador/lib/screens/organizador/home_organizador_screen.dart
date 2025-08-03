@@ -8,6 +8,7 @@ import 'package:frontend_organizador/screens/organizador/programar_partidos_scre
 import 'package:frontend_organizador/widgets/tournament_card.dart';
 import 'package:frontend_organizador/services/auth_service.dart';
 import 'package:frontend_organizador/utils/routes.dart';
+import 'package:frontend_organizador/screens/organizador/torneos_screen.dart';
 
 
 
@@ -33,6 +34,33 @@ class HomeOrganizadorScreen extends StatelessWidget {
                 Navigator.pushNamedAndRemoveUntil(context, Routes.welcome, (route) => false);
         },
         ),
+        ListTile(
+            leading: Icon(Icons.list),
+            title: Text("Torneos"), // ← Nueva opción
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => TorneosScreen()),
+              );
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.history),
+            title: Text("Historial de Torneos"),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => HistorialTorneosScreen()),
+              );
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.notifications),
+            title: Text("Notificaciones"),
+            onTap: () {
+              // Navegar a notificaciones
+            },
+          ),
           ],
         ),
       ),
