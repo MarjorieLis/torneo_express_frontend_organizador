@@ -1,5 +1,5 @@
 import 'package:frontend_organizador/models/partido.dart';
-// /lib/models/torneo.dart
+
 class Torneo {
   final String id;
   final String nombre;
@@ -43,6 +43,35 @@ class Torneo {
       estado: json['estado'],
       equipos: List<String>.from(json['equipos']),
       partidos: partidos,
+    );
+  }
+
+  // 👇 MÉTODO COPYWITH AÑADIDO
+  Torneo copyWith({
+    String? id,
+    String? nombre,
+    String? disciplina,
+    DateTime? fechaInicio,
+    DateTime? fechaFin,
+    int? maxEquipos,
+    String? reglas,
+    String? formato,
+    String? estado,
+    List<String>? equipos,
+    List<Partido>? partidos,
+  }) {
+    return Torneo(
+      id: id ?? this.id,
+      nombre: nombre ?? this.nombre,
+      disciplina: disciplina ?? this.disciplina,
+      fechaInicio: fechaInicio ?? this.fechaInicio,
+      fechaFin: fechaFin ?? this.fechaFin,
+      maxEquipos: maxEquipos ?? this.maxEquipos,
+      reglas: reglas ?? this.reglas,
+      formato: formato ?? this.formato,
+      estado: estado ?? this.estado,
+      equipos: equipos ?? this.equipos,
+      partidos: partidos ?? this.partidos,
     );
   }
 }

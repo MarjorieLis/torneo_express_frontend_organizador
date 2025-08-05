@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend_organizador/services/api_service.dart';
 import 'package:frontend_organizador/models/torneo.dart';
 import 'package:frontend_organizador/screens/organizador/editar_torneo_screen.dart';
+import 'package:frontend_organizador/screens/organizador/detalle_torneo_screen.dart';
 
 class TorneosScreen extends StatefulWidget {
   @override
@@ -191,6 +192,23 @@ class _TorneosScreenState extends State<TorneosScreen> {
                 ),
               ),
             ),
+          // ✅ Hacer clic en toda la tarjeta para ver detalles
+          Positioned.fill(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DetalleTorneoScreen(torneo: torneo),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -227,6 +245,7 @@ class _TorneosScreenState extends State<TorneosScreen> {
     }
   }
 
+  // ✅ Confirmación antes de cancelar
   Future<void> _confirmarCancelacion(String id) async {
     final confirmado = await showDialog(
       context: context,
