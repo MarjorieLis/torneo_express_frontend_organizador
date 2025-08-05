@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_organizador/models/torneo.dart';
-import 'package:frontend_organizador/screens/organizador/editar_torneo_screen.dart';
 import 'package:frontend_organizador/services/api_service.dart';
+import 'package:frontend_organizador/screens/organizador/editar_torneo_screen.dart';
 
 class DetalleTorneoScreen extends StatefulWidget {
   final Torneo torneo;
@@ -164,7 +164,7 @@ class _DetalleTorneoScreenState extends State<DetalleTorneoScreen> {
                   _buildInfoRow("Formato", _formatoLabel(torneo.formato)),
                   SizedBox(height: 20),
 
-                  // Reglas
+                  // Reglas del torneo
                   Text(
                     "Reglas del Torneo",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
