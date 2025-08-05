@@ -33,86 +33,159 @@ class _TorneosScreenState extends State<TorneosScreen> {
       appBar: AppBar(title: Text("Todos los Torneos")),
       body: _loading
           ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: torneos.length,
-              itemBuilder: (context, index) {
-                final torneo = torneos[index];
-                return _buildTorneoCard(torneo);
-              },
+          : Column(
+              children: [
+                // ✅ Resumen rápido de torneos (como en la imagen 2)
+                _buildQuickStats(),
+                SizedBox(height: 24),
+                // Lista de torneos
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: torneos.length,
+                    itemBuilder: (context, index) {
+                      final torneo = torneos[index];
+                      return _buildTorneoCard(torneo);
+                    },
+                  ),
+                ),
+              ],
             ),
+    );
+  }
+
+  // ✅ Resumen rápido: activos, suspendidos, finalizados
+  Widget _buildQuickStats() {
+    int activos = torneos.where((t) => t.estado == 'activo').length;
+    int suspendidos = torneos.where((t) => t.estado == 'suspendido').length;
+    int cancelados = torneos.where((t) => t.estado == 'cancelado').length;
+
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.15),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _statItem("Activos", activos.toString(), Icons.sports, Colors.blue),
+          _statItem("Suspendidos", suspendidos.toString(), Icons.pause_circle, Colors.orange),
+          _statItem("Cancelados", cancelados.toString(), Icons.cancel, Colors.red),
+        ],
+      ),
+    );
+  }
+
+  Widget _statItem(String label, String value, IconData icon, Color color) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 28),
+        SizedBox(height: 4),
+        Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey)),
+      ],
     );
   }
 
   Widget _buildTorneoCard(Torneo torneo) {
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      elevation: 3,
       child: Stack(
         children: [
-          // Contenido principal del ListTile
-          ListTile(
-            leading: CircleAvatar(
-              child: Text(torneo.disciplina[0]),
-              backgroundColor: _getStatusColor(torneo.estado),
-            ),
-            title: Text(torneo.nombre),
-            subtitle: Column(
+          Padding(
+            padding: EdgeInsets.all(16),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${torneo.disciplina} • ${torneo.maxEquipos} equipos'),
-                Text('Del ${_formatDate(torneo.fechaInicio)} al ${_formatDate(torneo.fechaFin)}'),
-              ],
-            ),
-            trailing: PopupMenuButton<String>(
-              onSelected: (opcion) {
-                if (opcion == 'editar') {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EditarTorneoScreen(torneo: torneo),
-                    ),
-                  ).then((value) {
-                    if (value == true) {
-                      _cargarTorneos();
+                // ✅ Icono de disciplina
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: _getStatusColor(torneo.estado),
+                  child: Text(
+                    torneo.disciplina[0].toUpperCase(),
+                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                SizedBox(width: 16),
+                // ✅ Información del torneo
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        torneo.nombre,
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        '${torneo.disciplina} • ${torneo.maxEquipos} equipos',
+                        style: TextStyle(color: Colors.grey[700]),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Del ${_formatDate(torneo.fechaInicio)} al ${_formatDate(torneo.fechaFin)}',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+                // ✅ Botón de más opciones
+                PopupMenuButton<String>(
+                  onSelected: (opcion) {
+                    if (opcion == 'editar') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EditarTorneoScreen(torneo: torneo),
+                        ),
+                      ).then((value) {
+                        if (value == true) {
+                          _cargarTorneos();
+                        }
+                      });
+                    } else if (opcion == 'suspender') {
+                      _suspenderTorneo(torneo.id);
+                    } else if (opcion == 'cancelar') {
+                      _confirmarCancelacion(torneo.id);
                     }
-                  });
-                } else if (opcion == 'suspender') {
-                  _suspenderTorneo(torneo.id);
-                } else if (opcion == 'cancelar') {
-                  _confirmarCancelacion(torneo.id);
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(value: 'editar', child: Text("Editar")),
-                if (torneo.estado == 'activo')
-                  PopupMenuItem(value: 'suspender', child: Text("Suspender")),
-                if (torneo.estado == 'activo' || torneo.estado == 'suspendido')
-                  PopupMenuItem(value: 'cancelar', child: Text("Cancelar")),
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(value: 'editar', child: Text("Editar")),
+                    if (torneo.estado == 'activo')
+                      PopupMenuItem(value: 'suspender', child: Text("Suspender")),
+                    if (torneo.estado == 'activo' || torneo.estado == 'suspendido')
+                      PopupMenuItem(value: 'cancelar', child: Text("Cancelar")),
+                  ],
+                ),
               ],
             ),
           ),
-          // ✅ Badge de estado (visible solo si no es "activo")
+          // ✅ Badge de estado (suspendido/cancelado)
           if (torneo.estado != 'activo')
             Positioned(
-              top: 8,
-              right: 8,
+              top: 12,
+              right: 12,
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: torneo.estado == 'suspendido' ? Colors.orange : Colors.red,
                   borderRadius: BorderRadius.circular(15),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
                 ),
                 child: Text(
                   torneo.estado.toUpperCase(),
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -154,7 +227,6 @@ class _TorneosScreenState extends State<TorneosScreen> {
     }
   }
 
-  // ✅ Confirmación antes de cancelar
   Future<void> _confirmarCancelacion(String id) async {
     final confirmado = await showDialog(
       context: context,
