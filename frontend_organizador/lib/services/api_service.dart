@@ -75,9 +75,13 @@ static Future<Map<String, dynamic>> actualizarEstadoEquipo(String id, String est
 }
 
 static Future<Map<String, dynamic>> programarPartidos(Map<String, dynamic> data) async {
+  final token = await AuthService.getToken();
   final response = await http.post(
     Uri.parse('$baseUrl/partidos/programar'),
-    headers: {'Content-Type': 'application/json'},
+    headers: {
+      'Content-Type': 'application/json',
+      'x-auth-token': token!,
+    },
     body: jsonEncode(data),
   );
   return jsonDecode(response.body);

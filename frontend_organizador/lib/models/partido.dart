@@ -1,39 +1,55 @@
-// /lib/models/partido.dart
+import 'package:flutter/material.dart';
 
 class Partido {
   final String id;
   final String torneoId;
-  final String equipoA;
-  final String equipoB;
+  final String equipoLocal;
+  final String equipoVisitante;
   final DateTime fecha;
+  final TimeOfDay hora;
   final String lugar;
-  final String estado;
-  final int golesA;
-  final int golesB;
+  final String estado; // programado, jugado, suspendido
+  final Map<String, dynamic> resultado; // { golesLocal: 2, golesVisitante: 1 }
 
   Partido({
     required this.id,
     required this.torneoId,
-    required this.equipoA,
-    required this.equipoB,
+    required this.equipoLocal,
+    required this.equipoVisitante,
     required this.fecha,
+    required this.hora,
     required this.lugar,
     required this.estado,
-    required this.golesA,
-    required this.golesB,
+    required this.resultado,
   });
 
   factory Partido.fromJson(Map<String, dynamic> json) {
     return Partido(
-      id: json['_id'],
-      torneoId: json['torneoId'],
-      equipoA: json['equipoA'],
-      equipoB: json['equipoB'],
+      id: json['_id'] ?? '',
+      torneoId: json['torneoId'] ?? '',
+      equipoLocal: json['equipoLocal'] ?? '',
+      equipoVisitante: json['equipoVisitante'] ?? '',
       fecha: DateTime.parse(json['fecha']),
-      lugar: json['lugar'],
-      estado: json['estado'],
-      golesA: json['golesA'] ?? 0,
-      golesB: json['golesB'] ?? 0,
+      hora: TimeOfDay(
+        hour: json['hora']['hour'],
+        minute: json['hora']['minute'],
+      ),
+      lugar: json['lugar'] ?? '',
+      estado: json['estado'] ?? 'programado',
+      resultado: json['resultado'] ?? {'golesLocal': 0, 'golesVisitante': 0},
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'torneoId': torneoId,
+      'equipoLocal': equipoLocal,
+      'equipoVisitante': equipoVisitante,
+      'fecha': fecha.toIso8601String(),
+      'hora': {'hour': hora.hour, 'minute': hora.minute},
+      'lugar': lugar,
+      'estado': estado,
+      'resultado': resultado,
+    };
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend_organizador/models/torneo.dart';
 import 'package:frontend_organizador/screens/organizador/crear_torneo_screen.dart';
 import 'package:frontend_organizador/screens/organizador/gestion_equipos_screen.dart';
 import 'package:frontend_organizador/screens/organizador/historial_torneos_screen.dart';
@@ -13,6 +14,21 @@ import 'package:frontend_organizador/screens/organizador/torneos_screen.dart';
 class HomeOrganizadorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    // ⚠️ Torneo de ejemplo solo para navegar a ProgramarPartidosScreen
+    final torneoEjemplo = Torneo(
+      id: '1',
+      nombre: 'Torneo de Ejemplo',
+      disciplina: 'Fútbol',
+      fechaInicio: DateTime.now(),
+      fechaFin: DateTime.now().add(Duration(days: 7)),
+      maxEquipos: 8,
+      reglas: 'Reglas básicas',
+      formato: 'Eliminación directa',
+      estado: 'activo',
+      equipos: [],
+      partidos: [],
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: Text("Torneo Express - Organizador"),
@@ -30,35 +46,35 @@ class HomeOrganizadorScreen extends StatelessWidget {
               onTap: () async {
                 await AuthService.logout();
                 Navigator.pushNamedAndRemoveUntil(context, Routes.welcome, (route) => false);
-        },
-        ),
-        ListTile(
-            leading: Icon(Icons.list),
-            title: Text("Torneos"), // ← Nueva opción
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => TorneosScreen()),
-              );
-            },
-          ),
-          ListTile(
-            leading: Icon(Icons.history),
-            title: Text("Historial de Torneos"),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => HistorialTorneosScreen()),
-              );
-            },
-          ),
-          ListTile(
-            leading: Icon(Icons.notifications),
-            title: Text("Notificaciones"),
-            onTap: () {
-              // Navegar a notificaciones
-            },
-          ),
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.list),
+              title: Text("Torneos"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => TorneosScreen()),
+                );
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.history),
+              title: Text("Historial de Torneos"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => HistorialTorneosScreen()),
+                );
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.notifications),
+              title: Text("Notificaciones"),
+              onTap: () {
+                // Navegar a notificaciones
+              },
+            ),
           ],
         ),
       ),
@@ -73,7 +89,11 @@ class HomeOrganizadorScreen extends StatelessWidget {
         children: [
           ActionCard(icon: Icons.add, label: "Crear Torneo", route: CrearTorneoScreen()),
           ActionCard(icon: Icons.group, label: "Aprobar Equipos", route: GestionEquiposScreen()),
-          ActionCard(icon: Icons.event, label: "Programar Partidos", route: ProgramarPartidosScreen()),
+          ActionCard(
+            icon: Icons.event,
+            label: "Programar Partidos",
+            route: ProgramarPartidosScreen(torneo: torneoEjemplo), // ✅ Corregido aquí
+          ),
           ActionCard(icon: Icons.notifications, label: "Notificar", route: NotificacionesScreen()),
           ActionCard(icon: Icons.analytics, label: "Estadísticas", route: EstadisticasScreen()),
           ActionCard(icon: Icons.history, label: "Historial", route: HistorialTorneosScreen()),
