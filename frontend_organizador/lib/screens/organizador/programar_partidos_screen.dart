@@ -16,30 +16,20 @@ class _ProgramarPartidosScreenState extends State<ProgramarPartidosScreen> {
   List<Map<String, dynamic>> partidos = [];
   bool _loading = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _inicializarPartidos();
-  }
-
   void _inicializarPartidos() {
-    final equipos = widget.torneo.equipos;
-    if (equipos.isEmpty) {
-      // ✅ Mostrar snackbar de forma segura después del primer frame
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("No hay equipos inscritos en este torneo")),
-        );
-      });
+    if (widget.torneo.equipos.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("No hay equipos inscritos en este torneo")),
+      );
       return;
     }
 
     final List<Map<String, dynamic>> nuevosPartidos = [];
-    for (int i = 0; i < equipos.length; i++) {
-      for (int j = i + 1; j < equipos.length; j++) {
+    for (int i = 0; i < widget.torneo.equipos.length; i++) {
+      for (int j = i + 1; j < widget.torneo.equipos.length; j++) {
         nuevosPartidos.add({
-          'local': equipos[i],
-          'visitante': equipos[j],
+          'local': widget.torneo.equipos[i],
+          'visitante': widget.torneo.equipos[j],
           'fecha': null,
           'hora': null,
           'lugar': '',
@@ -68,10 +58,7 @@ class _ProgramarPartidosScreenState extends State<ProgramarPartidosScreen> {
         final horaOffset = (i % 3) * 2;
 
         final fecha = inicio.add(Duration(days: dias));
-        final hora = TimeOfDay(
-          hour: (horaInicio.hour + horaOffset) % 24,
-          minute: horaInicio.minute,
-        );
+        final hora = TimeOfDay(hour: (horaInicio.hour + horaOffset) % 24, minute: horaInicio.minute);
         final lugar = 'Cancha ${i % 3 + 1}';
 
         setState(() {
@@ -81,38 +68,19 @@ class _ProgramarPartidosScreenState extends State<ProgramarPartidosScreen> {
         });
       }
 
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("✅ Calendario generado automáticamente")),
-        );
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Calendario generado automáticamente")),
+      );
     } catch (e) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error al generar calendario")),
-        );
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error al generar calendario")),
+      );
     } finally {
       setState(() => _loading = false);
     }
   }
 
   Future<void> _guardarProgramacion() async {
-    if (_modo == 'manual') {
-      for (var partido in partidos) {
-        if (partido['fecha'] == null ||
-            partido['hora'] == null ||
-            partido['lugar'].toString().trim().isEmpty ||
-            partido['capitanLocal'].toString().trim().isEmpty ||
-            partido['capitanVisitante'].toString().trim().isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Completa todos los campos obligatorios")),
-          );
-          return;
-        }
-      }
-    }
-
     setState(() => _loading = true);
 
     final data = {
@@ -123,10 +91,7 @@ class _ProgramarPartidosScreenState extends State<ProgramarPartidosScreen> {
           'equipoLocal': p['local'],
           'equipoVisitante': p['visitante'],
           'fecha': p['fecha']?.toIso8601String(),
-          'hora': {
-            'hour': p['hora']?.hour,
-            'minute': p['hora']?.minute,
-          },
+          'hora': {'hour': p['hora'].hour, 'minute': p['hora'].minute},
           'lugar': p['lugar'],
           'capitanLocal': p['capitanLocal'],
           'capitanVisitante': p['capitanVisitante'],
@@ -141,7 +106,7 @@ class _ProgramarPartidosScreenState extends State<ProgramarPartidosScreen> {
 
     if (response['success'] == true) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("✅ Partidos programados correctamente")),
+        SnackBar(content: Text("Partidos programados correctamente")),
       );
       Navigator.pop(context, true);
     } else {
@@ -163,20 +128,15 @@ class _ProgramarPartidosScreenState extends State<ProgramarPartidosScreen> {
                 children: [
                   DropdownButtonFormField<String>(
                     value: _modo,
-                    decoration: InputDecoration(
-                      labelText: "Modo de programación",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
+                    decoration: InputDecoration(labelText: "Modo de programación"),
                     items: [
                       DropdownMenuItem(value: 'manual', child: Text("Manual")),
                       DropdownMenuItem(value: 'automatica', child: Text("Automática")),
                     ],
-                    onChanged: (String? newValue) {
-                      if (newValue != null) {
+                    onChanged: (v) {
+                      if (v != null) {
                         setState(() {
-                          _modo = newValue;
+                          _modo = v;
                           if (_modo == 'automatica') {
                             _generarCalendarioAutomatico();
                           }
@@ -186,6 +146,7 @@ class _ProgramarPartidosScreenState extends State<ProgramarPartidosScreen> {
                   ),
                   SizedBox(height: 20),
 
+                  // Botón para generar automáticamente (solo en modo manual)
                   if (_modo == 'manual')
                     ElevatedButton.icon(
                       onPressed: _generarCalendarioAutomatico,
@@ -258,7 +219,6 @@ class _ProgramarPartidosScreenState extends State<ProgramarPartidosScreen> {
                       hintText: partido['fecha'] != null
                           ? "${partido['fecha'].day}/${partido['fecha'].month}/${partido['fecha'].year}"
                           : "Seleccionar",
-                      border: OutlineInputBorder(),
                     ),
                     initialValue: partido['fecha'] != null
                         ? "${partido['fecha'].day}/${partido['fecha'].month}/${partido['fecha'].year}"
@@ -283,7 +243,6 @@ class _ProgramarPartidosScreenState extends State<ProgramarPartidosScreen> {
                     decoration: InputDecoration(
                       labelText: "Hora",
                       hintText: partido['hora']?.format(context) ?? "Seleccionar",
-                      border: OutlineInputBorder(),
                     ),
                     initialValue: partido['hora']?.format(context),
                   ),
@@ -292,7 +251,7 @@ class _ProgramarPartidosScreenState extends State<ProgramarPartidosScreen> {
             ),
             SizedBox(height: 12),
             TextFormField(
-              decoration: InputDecoration(labelText: "Lugar *"),
+              decoration: InputDecoration(labelText: "Lugar"),
               initialValue: partido['lugar'],
               onChanged: (v) => partido['lugar'] = v,
             ),
@@ -301,7 +260,7 @@ class _ProgramarPartidosScreenState extends State<ProgramarPartidosScreen> {
               children: [
                 Expanded(
                   child: TextFormField(
-                    decoration: InputDecoration(labelText: "Capitán Local *"),
+                    decoration: InputDecoration(labelText: "Capitán Local"),
                     initialValue: partido['capitanLocal'],
                     onChanged: (v) => partido['capitanLocal'] = v,
                   ),
@@ -309,7 +268,7 @@ class _ProgramarPartidosScreenState extends State<ProgramarPartidosScreen> {
                 SizedBox(width: 12),
                 Expanded(
                   child: TextFormField(
-                    decoration: InputDecoration(labelText: "Capitán Visitante *"),
+                    decoration: InputDecoration(labelText: "Capitán Visitante"),
                     initialValue: partido['capitanVisitante'],
                     onChanged: (v) => partido['capitanVisitante'] = v,
                   ),
@@ -321,11 +280,7 @@ class _ProgramarPartidosScreenState extends State<ProgramarPartidosScreen> {
             SizedBox(height: 8),
             TextFormField(
               maxLines: 3,
-              decoration: InputDecoration(
-                labelText: "Jugadores Locales",
-                hintText: "Uno por línea",
-                border: OutlineInputBorder(),
-              ),
+              decoration: InputDecoration(labelText: "Jugadores Locales"),
               onChanged: (v) {
                 partido['jugadoresLocales'] = v.split('\n').where((e) => e.trim().isNotEmpty).toList();
               },
@@ -333,11 +288,7 @@ class _ProgramarPartidosScreenState extends State<ProgramarPartidosScreen> {
             SizedBox(height: 8),
             TextFormField(
               maxLines: 3,
-              decoration: InputDecoration(
-                labelText: "Jugadores Visitantes",
-                hintText: "Uno por línea",
-                border: OutlineInputBorder(),
-              ),
+              decoration: InputDecoration(labelText: "Jugadores Visitantes"),
               onChanged: (v) {
                 partido['jugadoresVisitantes'] = v.split('\n').where((e) => e.trim().isNotEmpty).toList();
               },

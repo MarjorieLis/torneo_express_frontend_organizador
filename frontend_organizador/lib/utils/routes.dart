@@ -4,7 +4,6 @@ import 'package:frontend_organizador/screens/auth/login_screen.dart';
 import 'package:frontend_organizador/screens/organizador/home_organizador_screen.dart';
 import 'package:frontend_organizador/screens/organizador/crear_torneo_screen.dart';
 import 'package:frontend_organizador/screens/organizador/gestion_equipos_screen.dart';
-// ❌ Eliminamos esta importación ya que no se puede usar sin parámetro
 // import 'package:frontend_organizador/screens/organizador/programar_partidos_screen.dart';
 import 'package:frontend_organizador/screens/organizador/notificaciones_screen.dart';
 import 'package:frontend_organizador/screens/organizador/estadisticas_screen.dart';
@@ -14,12 +13,20 @@ import 'package:frontend_organizador/screens/auth/register_organizador_screen.da
 import 'package:frontend_organizador/screens/auth/register_jugador_screen.dart';
 
 class Routes {
+  // Autenticación
   static const String welcome = '/welcome';
   static const String login = '/login';
-  static const String home = '/home';
   static const String register = '/register';
   static const String registerOrganizador = '/register/organizador';
   static const String registerJugador = '/register/jugador';
+
+  // Jugador
+  static const String homeJugador = '/home_jugador';
+  static const String torneosJugador = '/torneos_jugador';
+  static const String perfilJugador = '/perfil_jugador';
+
+  // Organizador
+  static const String home = '/home';
   static const String crearTorneo = '/crear-torneo';
   static const String gestionEquipos = '/gestion-equipos';
   static const String programarPartidos = '/programar-partidos';

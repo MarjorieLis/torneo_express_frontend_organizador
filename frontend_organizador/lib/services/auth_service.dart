@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  static const String baseUrl = 'http://192.168.0.10:3000/api'; // Asegúrate de que esta IP sea correcta
+  static const String baseUrl = 'http://192.168.0.2:3000/api'; // Asegúrate de que esta IP sea correcta
 
   // Registro de usuario
   static Future<Map<String, dynamic>> register(Map<String, dynamic> userData) async {
@@ -22,6 +22,11 @@ class AuthService {
       await prefs.setString('usuario_rol', data['usuario']['rol']);
       await prefs.setString('usuario_nombre', data['usuario']['nombre']);
       await prefs.setString('usuario_email', data['usuario']['email']);
+
+      // ✅ Guardar jugadorInfo si existe
+      if (data['usuario']['rol'] == 'jugador' && data['usuario']['jugadorInfo'] != null) {
+        await prefs.setString('jugador_info', jsonEncode(data['usuario']['jugadorInfo']));
+      }
     }
 
     return data;
@@ -49,6 +54,11 @@ class AuthService {
       await prefs.setString('usuario_nombre', nombre);
       await prefs.setString('usuario_email', email);
 
+      // ✅ Guardar jugadorInfo si es jugador
+      if (rol == 'jugador' && data['usuario']['jugadorInfo'] != null) {
+        await prefs.setString('jugador_info', jsonEncode(data['usuario']['jugadorInfo']));
+      }
+
       return {
         'success': true,
         'rol': rol,
@@ -71,6 +81,7 @@ class AuthService {
     await prefs.remove('usuario_rol');
     await prefs.remove('usuario_nombre');
     await prefs.remove('usuario_email');
+    await prefs.remove('jugador_info'); // ✅ Eliminar también la info del jugador
   }
 
   // Obtener rol del usuario actual
@@ -90,5 +101,12 @@ class AuthService {
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('token');
+  }
+
+  // ✅ Obtener información del jugador
+  static Future<Map<String, dynamic>?> getJugadorInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    final info = prefs.getString('jugador_info');
+    return info != null ? jsonDecode(info) : null;
   }
 }
