@@ -1,3 +1,4 @@
+// models/torneo.dart
 import 'package:frontend_organizador/models/partido.dart';
 
 class Torneo {
@@ -28,25 +29,26 @@ class Torneo {
   });
 
   factory Torneo.fromJson(Map<String, dynamic> json) {
-    var partidosList = json['partidos'] as List;
-    List<Partido> partidos = partidosList.map((i) => Partido.fromJson(i)).toList();
+    // ✅ Manejar `partidos` como opcional
+    final partidosJson = json['partidos'] as List?;
+    final partidos = partidosJson?.map((e) => Partido.fromJson(e)).toList() ?? [];
 
     return Torneo(
-      id: json['_id'] ?? json['id'],
-      nombre: json['nombre'],
-      disciplina: json['disciplina'],
-      fechaInicio: DateTime.parse(json['fechaInicio']),
-      fechaFin: DateTime.parse(json['fechaFin']),
-      maxEquipos: json['maxEquipos'],
-      reglas: json['reglas'],
-      formato: json['formato'],
-      estado: json['estado'],
-      equipos: List<String>.from(json['equipos']),
+      id: json['_id'] ?? json['id'] ?? '',
+      nombre: json['nombre'] ?? 'Sin nombre',
+      disciplina: json['disciplina'] ?? '',
+      fechaInicio: DateTime.tryParse(json['fechaInicio'] ?? '') ?? DateTime.now(),
+      fechaFin: DateTime.tryParse(json['fechaFin'] ?? '') ?? DateTime.now(),
+      maxEquipos: json['maxEquipos'] ?? 0,
+      reglas: json['reglas'] ?? '',
+      formato: json['formato'] ?? '',
+      estado: json['estado'] ?? 'activo',
+      equipos: (json['equipos'] as List?)?.map((e) => e.toString()).toList() ?? [],
       partidos: partidos,
     );
   }
 
-  // 👇 MÉTODO COPYWITH AÑADIDO
+  // ✅ copyWith (ya está bien, no necesita cambios)
   Torneo copyWith({
     String? id,
     String? nombre,

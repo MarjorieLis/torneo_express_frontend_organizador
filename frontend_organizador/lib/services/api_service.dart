@@ -7,7 +7,7 @@ import '../models/torneo.dart';
 import '../models/partido.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.0.10:3000/api';
+  static const String baseUrl = 'http://192.168.0.2:3000/api';
 
   static Future<Map<String, dynamic>> crearTorneo(Map<String, dynamic> data) async {
   final token = await AuthService.getToken();
@@ -138,7 +138,12 @@ static Future<Map<String, dynamic>> cancelarTorneo(String id) async {
 // services/api_service.dart
 static Future<Map<String, dynamic>> obtenerTorneosDisponibles() async {
   final token = await AuthService.getToken();
-  if (token == null) return {'success': false, 'message': 'No autenticado'};
+  print('🔐 Token: $token');
+
+  if (token == null) {
+    print('❌ Token no encontrado. Usuario no autenticado.');
+    return {'success': false, 'message': 'No autenticado'};
+  }
 
   try {
     final response = await http.get(
@@ -148,10 +153,24 @@ static Future<Map<String, dynamic>> obtenerTorneosDisponibles() async {
         'x-auth-token': token,
       },
     );
-    return jsonDecode(response.body);
+
+    print('📡 Estado: ${response.statusCode}');
+    print('📦 Cuerpo: ${response.body}');
+
+    final data = jsonDecode(response.body);
+
+    // ✅ Validar estructura antes de devolver
+    if (response.statusCode == 200 && data['success'] == true) {
+      return data;
+    } else {
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Error desconocido'
+      };
+    }
   } catch (e) {
+    print('❌ Error en la petición: $e');
     return {'success': false, 'message': 'Error de conexión'};
   }
 }
-
 }

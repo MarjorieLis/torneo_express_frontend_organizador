@@ -27,6 +27,8 @@ class _TorneosDisponiblesScreenState extends State<TorneosDisponiblesScreen> {
 
     try {
       final response = await ApiService.obtenerTorneosDisponibles();
+      print('🔍 Respuesta del backend: $response'); // 🔍 Depuración
+
       if (response['success'] == true) {
         final List<dynamic> data = response['torneos'];
         setState(() {
@@ -39,8 +41,9 @@ class _TorneosDisponiblesScreenState extends State<TorneosDisponiblesScreen> {
       }
     } catch (e) {
       setState(() {
-        _error = 'No se pudo conectar al servidor';
+        _error = 'No se pudo conectar al servidor. Verifica tu conexión.';
       });
+      print('❌ Excepción: $e');
     } finally {
       setState(() => _loading = false);
     }
