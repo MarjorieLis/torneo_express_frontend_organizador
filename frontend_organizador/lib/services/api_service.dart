@@ -173,4 +173,32 @@ static Future<Map<String, dynamic>> obtenerTorneosDisponibles() async {
     return {'success': false, 'message': 'Error de conexión'};
   }
 }
+
+static Future<Map<String, dynamic>> inscribirEquipo(String torneoId, String equipoId) async {
+  final token = await AuthService.getToken();
+  print('🔐 Token: $token');
+
+  if (token == null) {
+    return {'success': false, 'message': 'No autenticado'};
+  }
+
+  try {
+    final response = await http.post(
+      Uri.parse('$baseUrl/torneos/$torneoId/equipos'),
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token,
+      },
+      body: jsonEncode({'equipoId': equipoId}),
+    );
+
+    print('📡 Estado: ${response.statusCode}');
+    print('📦 Cuerpo: ${response.body}');
+
+    return jsonDecode(response.body);
+  } catch (e) {
+    print('❌ Error en la petición: $e');
+    return {'success': false, 'message': 'Error de conexión'};
+  }
+}
 }
