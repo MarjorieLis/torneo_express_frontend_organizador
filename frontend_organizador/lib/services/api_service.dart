@@ -135,4 +135,23 @@ static Future<Map<String, dynamic>> cancelarTorneo(String id) async {
   );
   return jsonDecode(response.body);
 }
+// services/api_service.dart
+static Future<Map<String, dynamic>> obtenerTorneosDisponibles() async {
+  final token = await AuthService.getToken();
+  if (token == null) return {'success': false, 'message': 'No autenticado'};
+
+  try {
+    final response = await http.get(
+      Uri.parse('$baseUrl/torneos/disponibles'),
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token,
+      },
+    );
+    return jsonDecode(response.body);
+  } catch (e) {
+    return {'success': false, 'message': 'Error de conexión'};
+  }
+}
+
 }

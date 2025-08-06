@@ -1,5 +1,7 @@
 // lib/screens/jugador/home_screen.dart
 import 'package:flutter/material.dart';
+import 'package:frontend_organizador/screens/jugador/torneos_disponibles_screen.dart';
+import 'package:frontend_organizador/services/auth_service.dart';
 import 'package:frontend_organizador/utils/routes.dart';
 
 class HomeJugadorScreen extends StatelessWidget {
@@ -9,12 +11,13 @@ class HomeJugadorScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Inicio'),
+        title: const Text('Inicio Jugador'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () {
-              Navigator.pushReplacementNamed(context, Routes.login);
+            onPressed: () async{
+              await AuthService.logout();
+              Navigator.pushReplacementNamed(context, Routes.welcome);
             },
           ),
         ],
@@ -34,9 +37,14 @@ class HomeJugadorScreen extends StatelessWidget {
             const SizedBox(height: 30),
             ElevatedButton(
               onPressed: () {
-                Navigator.pushNamed(context, Routes.torneosJugador);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TorneosDisponiblesScreen(),
+                  ),
+                );
               },
-              child: const Text('Ver Torneos'),
+              child: const Text('Ver Torneos Disponibles'),
             ),
             const SizedBox(height: 10),
             OutlinedButton(

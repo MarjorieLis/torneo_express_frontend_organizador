@@ -1,9 +1,10 @@
+// services/auth_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  static const String baseUrl = 'http://192.168.0.2:3000/api'; // Asegúrate de que esta IP sea correcta
+  static const String baseUrl = 'http://192.168.0.2:3000/api';
 
   // Registro de usuario
   static Future<Map<String, dynamic>> register(Map<String, dynamic> userData) async {
@@ -15,7 +16,6 @@ class AuthService {
 
     final data = jsonDecode(response.body);
 
-    // ✅ GUARDAR TOKEN Y DATOS SI EL REGISTRO ES EXITOSO
     if (response.statusCode == 201 && data['success'] == true) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', data['token']);
@@ -23,7 +23,6 @@ class AuthService {
       await prefs.setString('usuario_nombre', data['usuario']['nombre']);
       await prefs.setString('usuario_email', data['usuario']['email']);
 
-      // ✅ Guardar jugadorInfo si existe
       if (data['usuario']['rol'] == 'jugador' && data['usuario']['jugadorInfo'] != null) {
         await prefs.setString('jugador_info', jsonEncode(data['usuario']['jugadorInfo']));
       }
@@ -40,37 +39,22 @@ class AuthService {
       body: jsonEncode({'email': email, 'password': password}),
     );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
+    final data = jsonDecode(response.body);
 
-      final String rol = data['usuario']['rol'] ?? '';
-      final String token = data['token'];
-      final String nombre = data['usuario']['nombre'];
-      final String email = data['usuario']['email'];
-
+    if (response.statusCode == 200 && data['success'] == true) {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('token', token);
-      await prefs.setString('usuario_rol', rol);
-      await prefs.setString('usuario_nombre', nombre);
-      await prefs.setString('usuario_email', email);
+      await prefs.setString('token', data['token']);
+      await prefs.setString('usuario_rol', data['usuario']['rol']);
+      await prefs.setString('usuario_nombre', data['usuario']['nombre']);
+      await prefs.setString('usuario_email', data['usuario']['email']);
 
-      // ✅ Guardar jugadorInfo si es jugador
-      if (rol == 'jugador' && data['usuario']['jugadorInfo'] != null) {
+      if (data['usuario']['rol'] == 'jugador' && data['usuario']['jugadorInfo'] != null) {
         await prefs.setString('jugador_info', jsonEncode(data['usuario']['jugadorInfo']));
       }
 
-      return {
-        'success': true,
-        'rol': rol,
-        'nombre': nombre,
-        'email': email,
-      };
+      return data;
     } else {
-      final error = jsonDecode(response.body);
-      return {
-        'success': false,
-        'message': error['message'] ?? 'Credenciales incorrectas',
-      };
+      return data;
     }
   }
 
@@ -81,16 +65,16 @@ class AuthService {
     await prefs.remove('usuario_rol');
     await prefs.remove('usuario_nombre');
     await prefs.remove('usuario_email');
-    await prefs.remove('jugador_info'); // ✅ Eliminar también la info del jugador
+    await prefs.remove('jugador_info');
   }
 
-  // Obtener rol del usuario actual
+  // Obtener rol
   static Future<String?> getRol() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('usuario_rol');
   }
 
-  // Verificar si el usuario está autenticado
+  // Verificar si está autenticado
   static Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
