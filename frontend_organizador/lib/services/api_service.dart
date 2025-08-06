@@ -7,7 +7,7 @@ import '../models/torneo.dart';
 import '../models/partido.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.0.2:3000/api';
+  static const String baseUrl = 'http://172.16.83.71:3000/api';
 
   static Future<Map<String, dynamic>> crearTorneo(Map<String, dynamic> data) async {
   final token = await AuthService.getToken();
@@ -190,6 +190,86 @@ static Future<Map<String, dynamic>> inscribirEquipo(String torneoId, String equi
         'x-auth-token': token,
       },
       body: jsonEncode({'equipoId': equipoId}),
+    );
+
+    print('📡 Estado: ${response.statusCode}');
+    print('📦 Cuerpo: ${response.body}');
+
+    return jsonDecode(response.body);
+  } catch (e) {
+    print('❌ Error en la petición: $e');
+    return {'success': false, 'message': 'Error de conexión'};
+  }
+}
+static Future<Map<String, dynamic>> crearEquipo(String cuerpo) async {
+  final token = await AuthService.getToken();
+  print('🔐 Token: $token');
+
+  if (token == null) {
+    return {'success': false, 'message': 'No autenticado'};
+  }
+
+  try {
+    final response = await http.post(
+      Uri.parse('$baseUrl/equipos'),
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token,
+      },
+      body: cuerpo,
+    );
+
+    print('📡 Estado: ${response.statusCode}');
+    print('📦 Cuerpo: ${response.body}');
+
+    return jsonDecode(response.body);
+  } catch (e) {
+    print('❌ Error en la petición: $e');
+    return {'success': false, 'message': 'Error de conexión'};
+  }
+}
+
+static Future<Map<String, dynamic>> buscarJugador(String query) async {
+  final token = await AuthService.getToken();
+  print('🔐 Token: $token');
+
+  if (token == null) {
+    return {'success': false, 'message': 'No autenticado'};
+  }
+
+  try {
+    final response = await http.get(
+      Uri.parse('$baseUrl/jugadores/buscar?query=$query'),
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token,
+      },
+    );
+
+    print('📡 Estado: ${response.statusCode}');
+    print('📦 Cuerpo: ${response.body}');
+
+    return jsonDecode(response.body);
+  } catch (e) {
+    print('❌ Error en la petición: $e');
+    return {'success': false, 'message': 'Error de conexión'};
+  }
+}
+static Future<Map<String, dynamic>> obtenerJugadoresDisponibles(String torneoId) async {
+  final token = await AuthService.getToken();
+  print('🔐 Token: $token');
+
+  if (token == null) {
+    return {'success': false, 'message': 'No autenticado'};
+  }
+
+  try {
+    final response = await http.get(
+      Uri.parse('$baseUrl/jugadores/disponibles'),
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token,
+      },
     );
 
     print('📡 Estado: ${response.statusCode}');

@@ -93,4 +93,8 @@ class AuthService {
     final info = prefs.getString('jugador_info');
     return info != null ? jsonDecode(info) : null;
   }
+  static Future<String?> getUserId() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getString('usuario_id'); // Debe guardarse al hacer login
+}
 }
