@@ -77,16 +77,9 @@ class _InscripcionEquipoScreenState extends State<InscripcionEquipoScreen> {
     final capitanNombre = _capitanNombreController.text.trim();
     final capitanTelefono = _capitanTelefonoController.text.trim();
 
-    if (nombreEquipo.isEmpty) {
+    if (nombreEquipo.isEmpty || capitanNombre.isEmpty || capitanTelefono.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Por favor, ingresa el nombre del equipo.")),
-      );
-      return;
-    }
-
-    if (capitanNombre.isEmpty || capitanTelefono.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Completa los datos del capitán.")),
+        SnackBar(content: Text("Por favor, completa todos los campos obligatorios.")),
       );
       return;
     }
@@ -102,7 +95,7 @@ class _InscripcionEquipoScreenState extends State<InscripcionEquipoScreen> {
       final String? capitanId = await AuthService.getUserId();
       if (capitanId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("No se pudo obtener tu información. Inicia sesión nuevamente.")),
+          SnackBar(content: Text("No se pudo identificar al usuario actual.")),
         );
         return;
       }
@@ -122,7 +115,7 @@ class _InscripcionEquipoScreenState extends State<InscripcionEquipoScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Equipo inscrito correctamente")),
         );
-        Navigator.pop(context, true);
+        Navigator.pop(context, true); // Regresar con éxito
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(response['message'] ?? "Error al inscribir el equipo")),
