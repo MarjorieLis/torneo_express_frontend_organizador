@@ -281,4 +281,24 @@ static Future<Map<String, dynamic>> obtenerJugadoresDisponibles(String torneoId)
     return {'success': false, 'message': 'Error de conexión'};
   }
 }
+static Future<Map<String, dynamic>> register(Map<String, dynamic> data) async {
+  try {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/register'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(data),
+    );
+
+    final result = jsonDecode(response.body);
+
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      return {'success': true, 'token': result['token'], 'usuario': result['usuario']};
+    } else {
+      return {'success': false, 'message': result['message'] ?? 'Error en el registro'};
+    }
+  } catch (e) {
+    print('❌ Error en register: $e');
+    return {'success': false, 'message': 'Error de conexión con el servidor'};
+  }
+}
 }

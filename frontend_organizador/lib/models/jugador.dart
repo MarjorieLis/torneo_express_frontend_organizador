@@ -3,6 +3,7 @@ class Jugador {
   final String id;
   final String nombreCompleto;
   final String email;
+  final String cedula;
   final int edad;
   final String posicionPrincipal;
   final String? posicionSecundaria;
@@ -23,6 +24,7 @@ class Jugador {
     required this.id,
     required this.nombreCompleto,
     required this.email,
+    required this.cedula,
     required this.edad,
     required this.posicionPrincipal,
     this.posicionSecundaria,
@@ -45,6 +47,7 @@ class Jugador {
       id: json['id'] ?? '',
       nombreCompleto: json['nombre_completo'] ?? 'Sin nombre',
       email: json['email'] ?? '',
+      cedula: json['cedula'] ?? 'Sin cédula',
       edad: json['edad'] ?? 0,
       posicionPrincipal: json['posicion_principal'] ?? '',
       posicionSecundaria: json['posicion_secundaria'],
@@ -68,6 +71,7 @@ class Jugador {
       'id': id,
       'nombre_completo': nombreCompleto,
       'email': email,
+      'cedula': cedula, 
       'edad': edad,
       'posicion_principal': posicionPrincipal,
       'posicion_secundaria': posicionSecundaria,
