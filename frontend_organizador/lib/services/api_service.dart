@@ -7,7 +7,7 @@ import '../models/torneo.dart';
 import '../models/partido.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.0.9:3000/api';
+  static const String baseUrl = 'http://192.168.0.12:3000/api';
 
   static Future<Map<String, dynamic>> crearTorneo(Map<String, dynamic> data) async {
   final token = await AuthService.getToken();
