@@ -158,60 +158,61 @@ class _InscripcionEquipoScreenState extends State<InscripcionEquipoScreen> {
   }
 
   Future<void> _enviarInscripcion() async {
-    final nombreEquipo = _nombreEquipoController.text.trim();
-    final capitanNombre = _capitanNombreController.text.trim();
-    final capitanTelefono = _capitanTelefonoController.text.trim();
+  final nombreEquipo = _nombreEquipoController.text.trim();
+  final capitanNombre = _capitanNombreController.text.trim();
+  final capitanTelefono = _capitanTelefonoController.text.trim();
 
-    if (nombreEquipo.isEmpty || capitanNombre.isEmpty || capitanTelefono.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Completa todos los campos obligatorios.")),
-      );
-      return;
-    }
-
-    if (jugadoresSeleccionados.length < 2) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Selecciona al menos 2 jugadores.")),
-      );
-      return;
-    }
-
-    try {
-      final String? capitanId = await AuthService.getUserId();
-      if (capitanId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("No se pudo identificar al capitán.")),
-        );
-        return;
-      }
-
-      final cuerpo = jsonEncode({
-        'nombre': nombreEquipo,
-        'torneoId': widget.torneo.id,
-        'capitanId': capitanId,
-        'capitanNombre': capitanNombre,
-        'capitanTelefono': capitanTelefono,
-        'jugadorIds': jugadoresSeleccionados.map((j) => j.id).toList(),
-      });
-
-      final response = await ApiService.crearEquipo(cuerpo);
-
-      if (response['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("✅ Equipo inscrito correctamente")),
-        );
-        Navigator.pop(context, true);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response['message'] ?? "Error al inscribir")),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error de conexión con el servidor")),
-      );
-    }
+  if (nombreEquipo.isEmpty || capitanNombre.isEmpty || capitanTelefono.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Completa todos los campos obligatorios.")),
+    );
+    return;
   }
+
+  if (jugadoresSeleccionados.length < 2) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Selecciona al menos 2 jugadores.")),
+    );
+    return;
+  }
+
+  try {
+    final String? capitanId = await AuthService.getUserId();
+    if (capitanId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("No se pudo identificar al capitán.")),
+      );
+      return;
+    }
+
+    // ✅ Enviar capitanNombre
+    final cuerpo = jsonEncode({
+      'nombre': nombreEquipo,
+      'torneoId': widget.torneo.id,
+      'capitanId': capitanId,
+      'capitanNombre': capitanNombre,
+      'capitanTelefono': capitanTelefono,
+      'jugadorIds': jugadoresSeleccionados.map((j) => j.id).toList(),
+    });
+
+    final response = await ApiService.crearEquipo(cuerpo);
+
+    if (response['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("✅ Equipo inscrito correctamente")),
+      );
+      Navigator.pop(context, true);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(response['message'] ?? "Error al inscribir")),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Error de conexión con el servidor")),
+    );
+  }
+}
 
   @override
   Widget build(BuildContext context) {

@@ -7,7 +7,7 @@ import '../models/torneo.dart';
 import '../models/partido.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.0.12:3000/api';
+  static const String baseUrl = 'http://192.168.0.6:3000/api';
 
   static Future<Map<String, dynamic>> crearTorneo(Map<String, dynamic> data) async {
   final token = await AuthService.getToken();
@@ -297,6 +297,31 @@ static Future<Map<String, dynamic>> register(Map<String, dynamic> data) async {
   } catch (e) {
     print('❌ Error en register: $e');
     return {'success': false, 'message': 'Error de conexión con el servidor'};
+  }
+}
+static Future<Map<String, dynamic>> obtenerEquiposPendientes() async {
+  final token = await AuthService.getToken();
+  print('🔐 Token: $token');
+  if (token == null) {
+    return {'success': false, 'message': 'No autenticado'};
+  }
+
+  try {
+    final response = await http.get(
+      Uri.parse('$baseUrl/equipos/pendientes'),
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token,
+      },
+    );
+
+    print('📡 Estado: ${response.statusCode}');
+    print('📦 Cuerpo: ${response.body}');
+
+    return jsonDecode(response.body);
+  } catch (e) {
+    print('❌ Error en la petición: $e');
+    return {'success': false, 'message': 'Error de conexión'};
   }
 }
 }

@@ -71,8 +71,6 @@ class _GestionEquiposScreenState extends State<GestionEquiposScreen> {
                               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             SizedBox(height: 4),
-                            Text("Disciplina: ${equipo.disciplina}"),
-                            Text("Capitán (cédula): ${equipo.cedulaCapitan}"),
                             Text("Registrado: ${equipo.fechaRegistro.day}/${equipo.fechaRegistro.month}/${equipo.fechaRegistro.year}"),
                             SizedBox(height: 12),
                             Row(
