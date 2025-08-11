@@ -232,7 +232,6 @@ static Future<Map<String, dynamic>> crearEquipo(String cuerpo) async {
 static Future<Map<String, dynamic>> buscarJugador(String query) async {
   final token = await AuthService.getToken();
   print('🔐 Token: $token');
-
   if (token == null) {
     return {'success': false, 'message': 'No autenticado'};
   }

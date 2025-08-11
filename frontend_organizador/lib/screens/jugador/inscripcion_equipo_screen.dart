@@ -33,7 +33,6 @@ class _InscripcionEquipoScreenState extends State<InscripcionEquipoScreen> {
   void initState() {
     super.initState();
     _cargarJugadoresDisponibles();
-    // 🔥 Escuchar cambios en el campo de búsqueda
     _searchController.addListener(_onSearchChanged);
   }
 
@@ -78,8 +77,6 @@ class _InscripcionEquipoScreenState extends State<InscripcionEquipoScreen> {
   /// Se ejecuta cuando el texto de búsqueda cambia
   void _onSearchChanged() async {
     final query = _searchController.text.trim();
-
-    // Si está vacío, mostrar todos los disponibles
     if (query.isEmpty) {
       setState(() {
         jugadoresFiltrados = jugadoresDisponibles;
@@ -87,23 +84,30 @@ class _InscripcionEquipoScreenState extends State<InscripcionEquipoScreen> {
       return;
     }
 
-    // Evitar múltiples llamadas simultáneas
-    if (_searching) return;
-
     setState(() {
       _searching = true;
-      jugadoresFiltrados = []; // Limpiar mientras busca
     });
 
     try {
       final response = await ApiService.buscarJugador(query);
 
-      if (response['success'] == true && response['jugadores'] is List) {
-        final List<Jugador> resultados = (response['jugadores'] as List)
+      // ✅ Manejar tanto lista como objeto único
+      List<dynamic> resultadosData = [];
+
+      if (response['success'] == true) {
+        if (response['jugadores'] is List) {
+          // Si es una lista (múltiples resultados)
+          resultadosData = response['jugadores'];
+        } else if (response['jugador'] != null) {
+          // Si es un solo jugador, convertirlo a lista
+          resultadosData = [response['jugador']];
+        }
+
+        final List<Jugador> resultados = resultadosData
             .map((j) => Jugador.fromJson(j))
             .toList();
 
-        // ✅ Filtrar solo jugadores disponibles (sin equipo o no inscritos en este torneo)
+        // ✅ Filtrar solo los disponibles para este torneo
         final disponibles = resultados.where((jugador) {
           return jugadoresDisponibles.any((d) => d.id == jugador.id);
         }).toList();
@@ -122,6 +126,7 @@ class _InscripcionEquipoScreenState extends State<InscripcionEquipoScreen> {
         }
       }
     } catch (e) {
+      print('❌ Error en búsqueda: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error al buscar jugador")),
       );
