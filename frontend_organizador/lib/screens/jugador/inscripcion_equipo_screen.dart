@@ -46,7 +46,6 @@ class _InscripcionEquipoScreenState extends State<InscripcionEquipoScreen> {
     super.dispose();
   }
 
-  /// Carga todos los jugadores disponibles para este torneo
   Future<void> _cargarJugadoresDisponibles() async {
     setState(() => _loading = true);
     try {
@@ -67,14 +66,13 @@ class _InscripcionEquipoScreenState extends State<InscripcionEquipoScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error de conexión con el servidor")),
+        SnackBar(content: Text("Error de conexión")),
       );
     } finally {
       setState(() => _loading = false);
     }
   }
 
-  /// Se ejecuta cuando el texto de búsqueda cambia
   void _onSearchChanged() async {
     final query = _searchController.text.trim();
     if (query.isEmpty) {
@@ -91,30 +89,29 @@ class _InscripcionEquipoScreenState extends State<InscripcionEquipoScreen> {
     try {
       final response = await ApiService.buscarJugador(query);
 
-      // ✅ Manejar tanto lista como objeto único
-      List<dynamic> resultadosData = [];
-
       if (response['success'] == true) {
-        if (response['jugadores'] is List) {
-          // Si es una lista (múltiples resultados)
-          resultadosData = response['jugadores'];
-        } else if (response['jugador'] != null) {
-          // Si es un solo jugador, convertirlo a lista
-          resultadosData = [response['jugador']];
+        // Procesar respuesta
+        if (response['jugador'] != null) {
+          final jugadorData = response['jugador'];
+          final jugador = Jugador.fromJson(jugadorData);
+
+          // Verificar si el jugador está disponible para este torneo
+          final estaDisponible = jugadoresDisponibles.any((j) => j.id == jugador.id);
+          final yaSeleccionado = jugadoresSeleccionados.contains(jugador);
+
+          if (estaDisponible && !yaSeleccionado) {
+            setState(() {
+              jugadoresFiltrados = [jugador]; // Mostrar solo este jugador
+            });
+          } else if (yaSeleccionado) {
+            setState(() {
+              jugadoresFiltrados = [];
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("${jugador.nombreCompleto} ya seleccionado")),
+            );
+          }
         }
-
-        final List<Jugador> resultados = resultadosData
-            .map((j) => Jugador.fromJson(j))
-            .toList();
-
-        // ✅ Filtrar solo los disponibles para este torneo
-        final disponibles = resultados.where((jugador) {
-          return jugadoresDisponibles.any((d) => d.id == jugador.id);
-        }).toList();
-
-        setState(() {
-          jugadoresFiltrados = disponibles;
-        });
       } else {
         setState(() {
           jugadoresFiltrados = [];
@@ -126,10 +123,6 @@ class _InscripcionEquipoScreenState extends State<InscripcionEquipoScreen> {
         }
       }
     } catch (e) {
-      print('❌ Error en búsqueda: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error al buscar jugador")),
-      );
       setState(() {
         jugadoresFiltrados = [];
       });
@@ -140,7 +133,6 @@ class _InscripcionEquipoScreenState extends State<InscripcionEquipoScreen> {
     }
   }
 
-  /// Seleccionar o deseleccionar un jugador
   void _seleccionarJugador(Jugador jugador) {
     final yaEnEquipo = jugador.equipoId != null && jugador.equipoId!.isNotEmpty;
     if (yaEnEquipo) {
@@ -153,13 +145,18 @@ class _InscripcionEquipoScreenState extends State<InscripcionEquipoScreen> {
     setState(() {
       if (jugadoresSeleccionados.contains(jugador)) {
         jugadoresSeleccionados.remove(jugador);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("${jugador.nombreCompleto} removido del equipo")),
+        );
       } else {
         jugadoresSeleccionados.add(jugador);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("${jugador.nombreCompleto} agregado al equipo")),
+        );
       }
     });
   }
 
-  /// Enviar la inscripción del equipo
   Future<void> _enviarInscripcion() async {
     final nombreEquipo = _nombreEquipoController.text.trim();
     final capitanNombre = _capitanNombreController.text.trim();
@@ -236,24 +233,14 @@ class _InscripcionEquipoScreenState extends State<InscripcionEquipoScreen> {
                   _buildDetailRow("Máx. Equipos:", "${widget.torneo.maxEquipos}"),
                   SizedBox(height: 24),
 
-                  TextField(
-                    controller: _nombreEquipoController,
-                    decoration: InputDecoration(labelText: "Nombre del Equipo *"),
-                  ),
+                  TextField(controller: _nombreEquipoController, decoration: InputDecoration(labelText: "Nombre del Equipo *")),
+
                   SizedBox(height: 16),
-
                   Text("Datos del Capitán", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  TextField(
-                    controller: _capitanNombreController,
-                    decoration: InputDecoration(labelText: "Nombre Completo *"),
-                  ),
-                  TextField(
-                    controller: _capitanTelefonoController,
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(labelText: "Teléfono *"),
-                  ),
-                  SizedBox(height: 24),
+                  TextField(controller: _capitanNombreController, decoration: InputDecoration(labelText: "Nombre Completo *")),
+                  TextField(controller: _capitanTelefonoController, keyboardType: TextInputType.phone, decoration: InputDecoration(labelText: "Teléfono *")),
 
+                  SizedBox(height: 24),
                   Text("Buscar Jugador", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   TextField(
                     controller: _searchController,
@@ -261,55 +248,39 @@ class _InscripcionEquipoScreenState extends State<InscripcionEquipoScreen> {
                       hintText: "Buscar por cédula o correo",
                       prefixIcon: Icon(Icons.search),
                       suffixIcon: _searching
-                          ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                          ? SizedBox(width: 16, child: CircularProgressIndicator(strokeWidth: 2))
                           : null,
                     ),
                   ),
-                  SizedBox(height: 16),
 
+                  SizedBox(height: 16),
                   Text("Seleccionar Jugadores (${jugadoresSeleccionados.length})", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   Expanded(
-                    child: jugadoresFiltrados.isEmpty && !_searching
-                        ? Center(
-                            child: Text(
-                              _searchController.text.isEmpty
-                                  ? "No hay jugadores disponibles"
-                                  : "No se encontraron jugadores",
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          )
-                        : ListView.builder(
-                            itemCount: jugadoresFiltrados.length,
-                            itemBuilder: (context, index) {
-                              final jugador = jugadoresFiltrados[index];
-                              final estaSeleccionado = jugadoresSeleccionados.contains(jugador);
-                              final yaEnEquipo = jugador.equipoId != null && jugador.equipoId!.isNotEmpty;
+                    child: ListView.builder(
+                      itemCount: jugadoresFiltrados.length,
+                      itemBuilder: (context, index) {
+                        final jugador = jugadoresFiltrados[index];
+                        final estaSeleccionado = jugadoresSeleccionados.contains(jugador);
+                        final yaEnEquipo = jugador.equipoId != null && jugador.equipoId!.isNotEmpty;
 
-                              return Card(
-                                margin: EdgeInsets.symmetric(vertical: 4),
-                                child: ListTile(
-                                  leading: CircleAvatar(child: Text(jugador.nombreCompleto[0].toUpperCase())),
-                                  title: Text(jugador.nombreCompleto),
-                                  subtitle: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text("Posición: ${jugador.posicionPrincipal}"),
-                                      if (jugador.posicionSecundaria?.isNotEmpty == true)
-                                        Text("Alt. ${jugador.posicionSecundaria!}"),
-                                      if (yaEnEquipo) Text("Ya inscrito", style: TextStyle(color: Colors.red)),
-                                    ],
+                        return Card(
+                          margin: EdgeInsets.symmetric(vertical: 4),
+                          child: ListTile(
+                            leading: CircleAvatar(child: Text(jugador.nombreCompleto[0])),
+                            title: Text(jugador.nombreCompleto),
+                            subtitle: Text("Posición: ${jugador.posicionPrincipal}"),
+                            trailing: yaEnEquipo
+                                ? Icon(Icons.block, color: Colors.red)
+                                : Checkbox(
+                                    value: estaSeleccionado,
+                                    onChanged: yaEnEquipo ? null : (v) => _seleccionarJugador(jugador),
                                   ),
-                                  trailing: yaEnEquipo
-                                      ? Icon(Icons.block, color: Colors.red)
-                                      : Checkbox(
-                                          value: estaSeleccionado,
-                                          onChanged: yaEnEquipo ? null : (v) => _seleccionarJugador(jugador),
-                                        ),
-                                ),
-                              );
-                            },
                           ),
+                        );
+                      },
+                    ),
                   ),
+
                   SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: _enviarInscripcion,

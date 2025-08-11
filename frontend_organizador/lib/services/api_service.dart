@@ -204,7 +204,6 @@ static Future<Map<String, dynamic>> inscribirEquipo(String torneoId, String equi
 static Future<Map<String, dynamic>> crearEquipo(String cuerpo) async {
   final token = await AuthService.getToken();
   print('🔐 Token: $token');
-
   if (token == null) {
     return {'success': false, 'message': 'No autenticado'};
   }
