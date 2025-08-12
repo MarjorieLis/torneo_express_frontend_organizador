@@ -11,7 +11,8 @@ class AprobacionEquiposScreen extends StatefulWidget {
   const AprobacionEquiposScreen({Key? key}) : super(key: key);
 
   @override
-  _AprobacionEquiposScreenState createState() => _AprobacionEquiposScreenState();
+  _AprobacionEquiposScreenState createState() =>
+      _AprobacionEquiposScreenState();
 }
 
 class _AprobacionEquiposScreenState extends State<AprobacionEquiposScreen> {
@@ -24,94 +25,95 @@ class _AprobacionEquiposScreenState extends State<AprobacionEquiposScreen> {
     _cargarEquiposPendientes();
   }
 
- Future<void> _cargarEquiposPendientes() async {
-  print('🔄 [AprobacionEquiposScreen] Iniciando carga de equipos...');
-  setState(() => _loading = true);
+  Future<void> _cargarEquiposPendientes() async {
+    print('🔄 [AprobacionEquiposScreen] Iniciando carga de equipos...');
+    setState(() => _loading = true);
 
-  final token = await AuthService.getToken();
-  print('🔐 Token: $token'); // ✅ Verifica que el organizador tenga token
+    final token = await AuthService.getToken();
+    print('🔐 Token: $token'); // ✅ Verifica que el organizador tenga token
 
-  final response = await ApiService.obtenerEquiposPendientes();
-  print('📥 Respuesta del backend: $response'); // ✅ Aquí ves si hay datos
+    final response = await ApiService.obtenerEquiposPendientes();
+    print('📥 Respuesta del backend: $response'); // ✅ Aquí ves si hay datos
 
-  if (response['success'] == true && response['equipos'] is List) {
-    final List<Equipo> equipos = (response['equipos'] as List)
-        .map((e) => Equipo.fromJson(e))
-        .toList();
+    if (response['success'] == true && response['equipos'] is List) {
+      final List<Equipo> equipos =
+          (response['equipos'] as List).map((e) => Equipo.fromJson(e)).toList();
 
-    setState(() {
-      equiposPendientes = equipos;
-      _loading = false;
-    });
-  } else {
-    print('⚠️ No hay equipos pendientes: ${response['message']}');
-    setState(() => _loading = false);
+      setState(() {
+        equiposPendientes = equipos;
+        _loading = false;
+      });
+    } else {
+      print('⚠️ No hay equipos pendientes: ${response['message']}');
+      setState(() => _loading = false);
+    }
   }
-}
 
   @override
-Widget build(BuildContext context) {
-  final cs = Theme.of(context).colorScheme;
-  final txt = Theme.of(context).textTheme;
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final txt = Theme.of(context).textTheme;
 
-  return Scaffold(
-    appBar: AppBar(title: const Text("Aprobar Equipos")),
-    body: _loading
-        ? const Center(child: CircularProgressIndicator())
-        : Padding(
-            padding: const EdgeInsets.all(16),
-            child: equiposPendientes.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.inbox, size: 56, color: cs.outline),
-                        const SizedBox(height: 12),
-                        Text(
-                          "No hay equipos pendientes",
-                          style: txt.titleMedium?.copyWith(color: cs.onSurfaceVariant),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "Cuando existan solicitudes aparecerán aquí.",
-                          style: txt.bodyMedium?.copyWith(color: cs.outline),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        OutlinedButton.icon(
-                          onPressed: _cargarEquiposPendientes,
-                          icon: const Icon(Icons.refresh),
-                          label: const Text("Actualizar"),
-                        ),
-                      ],
+    return Scaffold(
+      appBar: AppBar(title: const Text("Aprobar Equipos")),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16),
+              child: equiposPendientes.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.inbox, size: 56, color: cs.outline),
+                          const SizedBox(height: 12),
+                          Text(
+                            "No hay equipos pendientes",
+                            style: txt.titleMedium
+                                ?.copyWith(color: cs.onSurfaceVariant),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            "Cuando existan solicitudes aparecerán aquí.",
+                            style: txt.bodyMedium?.copyWith(color: cs.outline),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          OutlinedButton.icon(
+                            onPressed: _cargarEquiposPendientes,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text("Actualizar"),
+                          ),
+                        ],
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _cargarEquiposPendientes,
+                      child: ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemCount: equiposPendientes.length,
+                        itemBuilder: (context, i) {
+                          final e = equiposPendientes[i];
+                          return EquipoCard(
+                            nombre: e.nombre,
+                            capitan: e.capitanNombre ?? 'Sin nombre',
+                            onAprobar: () async {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("${e.nombre} aprobado")),
+                              );
+                            },
+                            onRechazar: () async {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text("${e.nombre} rechazado")),
+                              );
+                            },
+                          );
+                        },
+                      ),
                     ),
-                  )
-                : RefreshIndicator(
-                    onRefresh: _cargarEquiposPendientes,
-                    child: ListView.builder(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      itemCount: equiposPendientes.length,
-                      itemBuilder: (context, i) {
-                        final e = equiposPendientes[i];
-                        return EquipoCard(
-                          nombre: e.nombre,
-                          capitan: e.capitanNombre ?? 'Sin nombre',
-                          onAprobar: () async {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("${e.nombre} aprobado")),
-                            );
-                          },
-                          onRechazar: () async {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("${e.nombre} rechazado")),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ),
-          ),
-  );
-}
+            ),
+    );
+  }
 }
