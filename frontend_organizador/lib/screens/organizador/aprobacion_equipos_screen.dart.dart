@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend_organizador/models/equipo.dart';
 import 'package:frontend_organizador/services/api_service.dart';
 import 'package:frontend_organizador/services/auth_service.dart';
+import 'package:frontend_organizador/widgets/equipo_card.dart';
 
 class AprobacionEquiposScreen extends StatefulWidget {
   const AprobacionEquiposScreen({Key? key}) : super(key: key);
@@ -49,66 +50,68 @@ class _AprobacionEquiposScreenState extends State<AprobacionEquiposScreen> {
 }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Aprobar Equipos")),
-      body: _loading
-          ? Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (equiposPendientes.isEmpty)
-                    Center(
-                      child: Text(
-                        "No hay equipos pendientes de aprobación",
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    )
-                  else
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: equiposPendientes.length,
-                        itemBuilder: (context, index) {
-                          final equipo = equiposPendientes[index];
+Widget build(BuildContext context) {
+  final cs = Theme.of(context).colorScheme;
+  final txt = Theme.of(context).textTheme;
 
-                          return Card(
-                            margin: EdgeInsets.symmetric(vertical: 4),
-                            child: ListTile(
-                              leading: CircleAvatar(child: Icon(Icons.group)),
-                              title: Text(equipo.nombre),
-                              subtitle: Text("Capitán: ${equipo.capitanNombre}"),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  ElevatedButton(
-                                    onPressed: () async {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text("${equipo.nombre} aprobado")),
-                                      );
-                                    },
-                                    child: Text("Aprobar"),
-                                  ),
-                                  SizedBox(width: 8),
-                                  ElevatedButton(
-                                    onPressed: () async {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text("${equipo.nombre} rechazado")),
-                                      );
-                                    },
-                                    child: Text("Rechazar"),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+  return Scaffold(
+    appBar: AppBar(title: const Text("Aprobar Equipos")),
+    body: _loading
+        ? const Center(child: CircularProgressIndicator())
+        : Padding(
+            padding: const EdgeInsets.all(16),
+            child: equiposPendientes.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.inbox, size: 56, color: cs.outline),
+                        const SizedBox(height: 12),
+                        Text(
+                          "No hay equipos pendientes",
+                          style: txt.titleMedium?.copyWith(color: cs.onSurfaceVariant),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Cuando existan solicitudes aparecerán aquí.",
+                          style: txt.bodyMedium?.copyWith(color: cs.outline),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        OutlinedButton.icon(
+                          onPressed: _cargarEquiposPendientes,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text("Actualizar"),
+                        ),
+                      ],
                     ),
-                ],
-              ),
-            ),
-    );
-  }
+                  )
+                : RefreshIndicator(
+                    onRefresh: _cargarEquiposPendientes,
+                    child: ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemCount: equiposPendientes.length,
+                      itemBuilder: (context, i) {
+                        final e = equiposPendientes[i];
+                        return EquipoCard(
+                          nombre: e.nombre,
+                          capitan: e.capitanNombre ?? 'Sin nombre',
+                          onAprobar: () async {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("${e.nombre} aprobado")),
+                            );
+                          },
+                          onRechazar: () async {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("${e.nombre} rechazado")),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+          ),
+  );
+}
 }

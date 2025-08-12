@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_organizador/models/torneo.dart';
+import 'package:frontend_organizador/screens/organizador/aprobacion_equipos_screen.dart.dart';
 import 'package:frontend_organizador/screens/organizador/crear_torneo_screen.dart';
 import 'package:frontend_organizador/screens/organizador/gestion_equipos_screen.dart';
 import 'package:frontend_organizador/screens/organizador/historial_torneos_screen.dart';
@@ -88,7 +89,8 @@ class HomeOrganizadorScreen extends StatelessWidget {
         ),
         children: [
           ActionCard(icon: Icons.add, label: "Crear Torneo", route: CrearTorneoScreen()),
-          ActionCard(icon: Icons.group, label: "Aprobar Equipos", route: GestionEquiposScreen()),
+          //ActionCard(icon: Icons.group, label: "Aprobar Equipos", route: GestionEquiposScreen()),
+          ActionCard(icon: Icons.group, label: "Aprobar Equipos", route: AprobacionEquiposScreen()),
           ActionCard(
             icon: Icons.event,
             label: "Programar Partidos",
