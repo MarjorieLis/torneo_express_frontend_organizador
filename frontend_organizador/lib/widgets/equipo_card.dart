@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:frontend_organizador/models/equipo.dart'; // ✅ Importa el modelo
 
 /// Tarjeta bonita y responsiva para cada equipo
 class EquipoCard extends StatelessWidget {
-  final String nombre;
-  final String capitan;
+  final Equipo equipo; 
   final VoidCallback onAprobar;
   final VoidCallback onRechazar;
 
   const EquipoCard({
     super.key,
-    required this.nombre,
-    required this.capitan,
+    required this.equipo, 
     required this.onAprobar,
     required this.onRechazar,
   });
@@ -45,7 +44,7 @@ class EquipoCard extends StatelessWidget {
                 children: [
                   // Nombre del equipo
                   Text(
-                    nombre,
+                    equipo.nombre, // ✅ Usar equipo.nombre
                     style: txt.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -59,7 +58,7 @@ class EquipoCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          "Capitán: $capitan",
+                          "Capitán: ${equipo.capitanNombre ?? 'Sin capitán'}", // ✅ Usar equipo.capitanNombre
                           style: txt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -68,9 +67,34 @@ class EquipoCard extends StatelessWidget {
                     ],
                   ),
 
+                  const SizedBox(height: 8),
+
+                  // ✅ Mostrar lista de jugadores
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 2,
+                    children: [
+                      for (var jugador in equipo.jugadores)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: cs.primaryContainer,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            jugador.nombre,
+                            style: txt.bodySmall?.copyWith(
+                              color: cs.onPrimaryContainer,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+
                   const SizedBox(height: 12),
 
-                  // Acciones (se adaptan al espacio)
+                  // Acciones
                   Wrap(
                     spacing: 12,
                     runSpacing: 8,

@@ -1,5 +1,3 @@
-// screens/organizador/aprobacion_equipos_screen.dart
-
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:frontend_organizador/models/equipo.dart';
@@ -30,10 +28,10 @@ class _AprobacionEquiposScreenState extends State<AprobacionEquiposScreen> {
     setState(() => _loading = true);
 
     final token = await AuthService.getToken();
-    print('🔐 Token: $token'); // ✅ Verifica que el organizador tenga token
+    print('🔐 Token: $token');
 
     final response = await ApiService.obtenerEquiposPendientes();
-    print('📥 Respuesta del backend: $response'); // ✅ Aquí ves si hay datos
+    print('📥 Respuesta del backend: $response');
 
     if (response['success'] == true && response['equipos'] is List) {
       final List<Equipo> equipos =
@@ -96,8 +94,7 @@ class _AprobacionEquiposScreenState extends State<AprobacionEquiposScreen> {
                         itemBuilder: (context, i) {
                           final e = equiposPendientes[i];
                           return EquipoCard(
-                            nombre: e.nombre,
-                            capitan: e.capitanNombre ?? 'Sin nombre',
+                            equipo: e, // ✅ Pasar todo el objeto Equipo
                             onAprobar: () async {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text("${e.nombre} aprobado")),
