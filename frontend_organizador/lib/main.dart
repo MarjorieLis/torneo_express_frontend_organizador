@@ -1,8 +1,8 @@
 // lib/main.dart
 
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart'; // 👈 Requerido para MaterialLocalizations
-import 'package:intl/date_symbol_data_local.dart'; // Para formatos de fecha
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 // Importaciones de pantallas
 import 'package:frontend_organizador/screens/auth/login_screen.dart';
@@ -10,7 +10,7 @@ import 'package:frontend_organizador/screens/auth/register_screen.dart';
 import 'package:frontend_organizador/screens/auth/register_organizador_screen.dart';
 import 'package:frontend_organizador/screens/auth/register_jugador_screen.dart';
 import 'package:frontend_organizador/screens/organizador/home_organizador_screen.dart';
-import 'package:frontend_organizador/screens/jugador/home_jugador_screen.dart'; // ✅ Importado
+import 'package:frontend_organizador/screens/jugador/home_jugador_screen.dart';
 import 'package:frontend_organizador/utils/routes.dart';
 import 'package:frontend_organizador/services/auth_service.dart';
 
@@ -25,21 +25,15 @@ import 'package:frontend_organizador/screens/organizador/programar_partidos_scre
 import 'package:frontend_organizador/screens/organizador/torneos_screen.dart';
 import 'package:frontend_organizador/screens/organizador/editar_torneo_screen.dart';
 import 'package:frontend_organizador/screens/organizador/detalle_torneo_screen.dart';
-
-// Modelo
 import 'package:frontend_organizador/models/torneo.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // 🔥 Inicializa el soporte para formatos de fecha (especialmente en español)
   await initializeDateFormatting();
 
-  // Obtener estado de autenticación y rol
   final isLoggedIn = await AuthService.isLoggedIn();
   final rol = await AuthService.getRol() ?? '';
 
-  // Definir ruta inicial
   final initialRoute = isLoggedIn
       ? (rol == 'organizador' ? Routes.home : Routes.homeJugador)
       : Routes.welcome;
@@ -59,39 +53,26 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue),
       initialRoute: initialRoute,
+
+      // ✅ Usa todas las rutas definidas en Routes.routes
       routes: {
-        // Autenticación
-        Routes.welcome: (context) => WelcomeScreen(),
-        Routes.login: (context) => LoginScreen(),
-        Routes.register: (context) => RegisterScreen(),
-        Routes.registerOrganizador: (context) => RegisterOrganizadorScreen(),
-        Routes.registerJugador: (context) => RegisterJugadorScreen(),
+        ...Routes.routes, // ✅ Todas las rutas estáticas
 
-        // Jugador
-        Routes.homeJugador: (context) => const HomeJugadorScreen(),
-
-        // Organizador
-        Routes.home: (context) => HomeOrganizadorScreen(),
-        Routes.crearTorneo: (context) => CrearTorneoScreen(),
-        Routes.gestionEquipos: (context) => GestionEquiposScreen(),
+        // ✅ Rutas con argumentos
         Routes.programarPartidos: (context) {
           final torneo = ModalRoute.of(context)!.settings.arguments as Torneo;
           return ProgramarPartidosScreen(torneo: torneo);
         },
-        Routes.notificaciones: (context) => NotificacionesScreen(),
-        Routes.estadisticas: (context) => EstadisticasScreen(),
-        Routes.historial: (context) => HistorialTorneosScreen(),
       },
 
-      // ✅ LOCALIZACIONES: Esenciales para AlertDialog, DatePicker, etc.
       localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,   // Textos como "OK", "Cancelar"
-        GlobalWidgetsLocalizations.delegate,   // Widgets básicos
-        GlobalCupertinoLocalizations.delegate, // Para iOS (opcional)
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('es', ''), // Español
-        Locale('en', ''), // Inglés
+        Locale('es', ''),
+        Locale('en', ''),
       ],
     );
   }

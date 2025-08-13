@@ -60,6 +60,11 @@ class HomeOrganizadorScreen extends StatelessWidget {
               },
             ),
             ListTile(
+              leading: Icon(Icons.check_circle_outline),
+              title: Text('Equipos Aprobados'),
+              onTap: () => Navigator.pushNamed(context, Routes.equiposAprobados),
+              ),
+            ListTile(
               leading: Icon(Icons.history),
               title: Text("Historial de Torneos"),
               onTap: () {

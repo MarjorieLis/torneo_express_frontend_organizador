@@ -6,6 +6,7 @@ import 'package:frontend_organizador/services/auth_service.dart';
 import '../models/torneo.dart';
 import '../models/partido.dart';
 import '../models/notificacion.dart';
+import '../models/equipo.dart'; // ✅ Importa el modelo Equipo
 
 class ApiService {
   static const String baseUrl = 'http://192.168.0.6:3000/api';
@@ -176,6 +177,40 @@ class ApiService {
     } catch (e) {
       print('❌ Error en la petición: $e');
       return {'success': false, 'message': 'Error de conexión'};
+    }
+  }
+
+  // Nueva función: obtener equipos aprobados
+  static Future<List<Equipo>> obtenerEquiposAprobados() async {
+    final token = await AuthService.getToken();
+    print('🔐 Token: $token');
+
+    if (token == null) {
+      return [];
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/equipos/aprobados'),
+        headers: {
+          'x-auth-token': token,
+          'Content-Type': 'application/json',
+        },
+      );
+
+      print('📡 Estado: ${response.statusCode}');
+      print('📦 Cuerpo: ${response.body}');
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['success'] == true && data['equipos'] is List) {
+        return (data['equipos'] as List).map((e) => Equipo.fromJson(e)).toList();
+      } else {
+        print('⚠️ No hay equipos aprobados: ${data['message']}');
+        return [];
+      }
+    } catch (e) {
+      print('❌ Error en la petición: $e');
+      return [];
     }
   }
 

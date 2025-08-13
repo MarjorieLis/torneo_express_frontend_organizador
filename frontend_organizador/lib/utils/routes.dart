@@ -1,16 +1,21 @@
+// utils/routes.dart
 import 'package:flutter/material.dart';
 import 'package:frontend_organizador/screens/auth/welcome_screen.dart';
 import 'package:frontend_organizador/screens/auth/login_screen.dart';
-import 'package:frontend_organizador/screens/organizador/home_organizador_screen.dart';
-import 'package:frontend_organizador/screens/organizador/crear_torneo_screen.dart';
-import 'package:frontend_organizador/screens/organizador/gestion_equipos_screen.dart';
-// import 'package:frontend_organizador/screens/organizador/programar_partidos_screen.dart';
-import 'package:frontend_organizador/screens/organizador/notificaciones_screen.dart';
-import 'package:frontend_organizador/screens/organizador/estadisticas_screen.dart';
-import 'package:frontend_organizador/screens/organizador/historial_torneos_screen.dart';
 import 'package:frontend_organizador/screens/auth/register_screen.dart';
 import 'package:frontend_organizador/screens/auth/register_organizador_screen.dart';
 import 'package:frontend_organizador/screens/auth/register_jugador_screen.dart';
+import 'package:frontend_organizador/screens/organizador/home_organizador_screen.dart';
+import 'package:frontend_organizador/screens/organizador/crear_torneo_screen.dart';
+import 'package:frontend_organizador/screens/organizador/gestion_equipos_screen.dart';
+import 'package:frontend_organizador/screens/organizador/historial_torneos_screen.dart';
+import 'package:frontend_organizador/screens/organizador/notificaciones_screen.dart';
+import 'package:frontend_organizador/screens/organizador/estadisticas_screen.dart';
+import 'package:frontend_organizador/screens/organizador/programar_partidos_screen.dart';
+import 'package:frontend_organizador/screens/organizador/torneos_screen.dart';
+import 'package:frontend_organizador/screens/organizador/editar_torneo_screen.dart';
+import 'package:frontend_organizador/screens/organizador/detalle_torneo_screen.dart';
+import 'package:frontend_organizador/screens/organizador/equipos_aprobados_screen.dart'; // ✅ Importa la pantalla
 
 class Routes {
   // Autenticación
@@ -33,8 +38,9 @@ class Routes {
   static const String notificaciones = '/notificaciones';
   static const String estadisticas = '/estadisticas';
   static const String historial = '/historial';
+  static const String equiposAprobados = '/equipos-aprobados'; // ✅ Nueva ruta
 
-  // ✅ CORRECTO: Usa Widget Function(BuildContext)
+  // === RUTAS ===
   static Map<String, Widget Function(BuildContext)> get routes {
     return {
       welcome: (context) => WelcomeScreen(),
@@ -45,11 +51,10 @@ class Routes {
       home: (context) => HomeOrganizadorScreen(),
       crearTorneo: (context) => CrearTorneoScreen(),
       gestionEquipos: (context) => GestionEquiposScreen(),
-      // ❌ Eliminado porque requiere parámetro obligatorio
-      // programarPartidos: (context) => ProgramarPartidosScreen(),
       notificaciones: (context) => NotificacionesScreen(),
       estadisticas: (context) => EstadisticasScreen(),
       historial: (context) => HistorialTorneosScreen(),
+      equiposAprobados: (context) => EquiposAprobadosScreen(), // ✅ Añadida
     };
   }
 }

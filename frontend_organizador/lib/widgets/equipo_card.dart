@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:frontend_organizador/models/equipo.dart'; // ✅ Importa el modelo
+import 'package:frontend_organizador/models/equipo.dart';
 
 /// Tarjeta bonita y responsiva para cada equipo
 class EquipoCard extends StatelessWidget {
-  final Equipo equipo; 
-  final VoidCallback onAprobar;
-  final VoidCallback onRechazar;
+  final Equipo equipo;
+  final VoidCallback? onAprobar; // ✅ Opcional
+  final VoidCallback? onRechazar; // ✅ Opcional
 
   const EquipoCard({
     super.key,
-    required this.equipo, 
-    required this.onAprobar,
-    required this.onRechazar,
+    required this.equipo,
+    this.onAprobar, // ✅ Quita 'required'
+    this.onRechazar, // ✅ Quita 'required'
   });
 
   @override
@@ -44,7 +44,7 @@ class EquipoCard extends StatelessWidget {
                 children: [
                   // Nombre del equipo
                   Text(
-                    equipo.nombre, // ✅ Usar equipo.nombre
+                    equipo.nombre,
                     style: txt.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -58,7 +58,7 @@ class EquipoCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          "Capitán: ${equipo.capitanNombre ?? 'Sin capitán'}", // ✅ Usar equipo.capitanNombre
+                          "Capitán: ${equipo.capitanNombre ?? 'Sin capitán'}",
                           style: txt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -69,7 +69,7 @@ class EquipoCard extends StatelessWidget {
 
                   const SizedBox(height: 8),
 
-                  // ✅ Mostrar lista de jugadores
+                  // Mostrar lista de jugadores
                   Wrap(
                     spacing: 4,
                     runSpacing: 2,
@@ -92,29 +92,32 @@ class EquipoCard extends StatelessWidget {
                     ],
                   ),
 
-                  const SizedBox(height: 12),
-
-                  // Acciones
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 8,
-                    children: [
-                      FilledButton.icon(
-                        onPressed: onAprobar,
-                        icon: const Icon(Icons.check_rounded),
-                        label: const Text("Aprobar"),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: onRechazar,
-                        icon: const Icon(Icons.close_rounded),
-                        label: const Text("Rechazar"),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: cs.error,
-                          side: BorderSide(color: cs.error),
-                        ),
-                      ),
-                    ],
-                  ),
+                  // ✅ Mostrar botones solo si onAprobar o onRechazar están definidos
+                  if (onAprobar != null || onRechazar != null) ...[
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 8,
+                      children: [
+                        if (onAprobar != null)
+                          FilledButton.icon(
+                            onPressed: onAprobar,
+                            icon: const Icon(Icons.check_rounded),
+                            label: const Text("Aprobar"),
+                          ),
+                        if (onRechazar != null)
+                          OutlinedButton.icon(
+                            onPressed: onRechazar,
+                            icon: const Icon(Icons.close_rounded),
+                            label: const Text("Rechazar"),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: cs.error,
+                              side: BorderSide(color: cs.error),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
