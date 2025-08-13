@@ -1,28 +1,23 @@
+// models/notificacion.dart
 class Notificacion {
   final String id;
-  final String torneoId;
   final String mensaje;
-  final String tipo; // "cambio_horario", "resultado", "suspensión"
-  final DateTime fecha;
   final bool leida;
+  final DateTime fecha;
 
   Notificacion({
     required this.id,
-    required this.torneoId,
     required this.mensaje,
-    required this.tipo,
-    required this.fecha,
     required this.leida,
+    required this.fecha,
   });
 
   factory Notificacion.fromJson(Map<String, dynamic> json) {
     return Notificacion(
-      id: json['_id'],
-      torneoId: json['torneoId'],
-      mensaje: json['mensaje'],
-      tipo: json['tipo'],
-      fecha: DateTime.parse(json['fecha']),
-      leida: json['leida'],
+      id: json['id'] ?? json['_id'] ?? '',
+      mensaje: json['mensaje'] ?? 'Sin mensaje',
+      leida: json['leida'] == true,
+      fecha: DateTime.tryParse(json['fecha'] ?? '') ?? DateTime.now(),
     );
   }
 }

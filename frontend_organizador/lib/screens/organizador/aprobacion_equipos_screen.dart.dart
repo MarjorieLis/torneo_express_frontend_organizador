@@ -94,17 +94,50 @@ class _AprobacionEquiposScreenState extends State<AprobacionEquiposScreen> {
                         itemBuilder: (context, i) {
                           final e = equiposPendientes[i];
                           return EquipoCard(
-                            equipo: e, // ✅ Pasar todo el objeto Equipo
+                            equipo: e,
                             onAprobar: () async {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("${e.nombre} aprobado")),
-                              );
+                              // ✅ Llama al backend para aprobar
+                              final success = await ApiService.aprobarEquipo(e.id);
+
+                              if (success) {
+                                // ✅ Remueve de la lista local
+                                setState(() {
+                                  equiposPendientes.remove(e);
+                                });
+
+                                // ✅ Mensaje de éxito
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("${e.nombre} aprobado")),
+                                );
+                              } else {
+                                // ✅ Error
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text("Error al aprobar ${e.nombre}"),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
                             },
                             onRechazar: () async {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text("${e.nombre} rechazado")),
-                              );
+                              final success = await ApiService.rechazarEquipo(e.id);
+
+                              if (success) {
+                                setState(() {
+                                  equiposPendientes.remove(e);
+                                });
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("${e.nombre} rechazado")),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text("Error al rechazar ${e.nombre}"),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
                             },
                           );
                         },
