@@ -29,7 +29,7 @@ class Torneo {
   });
 
   factory Torneo.fromJson(Map<String, dynamic> json) {
-    // ✅ Manejar `partidos` como opcional
+    // ✅ Manejar `partidos` como opcional (puede venir null)
     final partidosJson = json['partidos'] as List?;
     final partidos = partidosJson?.map((e) => Partido.fromJson(e)).toList() ?? [];
 
@@ -48,7 +48,7 @@ class Torneo {
     );
   }
 
-  // ✅ copyWith (ya está bien, no necesita cambios)
+  // ✅ copyWith (sin cambios, ya está bien)
   Torneo copyWith({
     String? id,
     String? nombre,

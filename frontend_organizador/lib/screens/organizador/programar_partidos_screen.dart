@@ -1,6 +1,9 @@
+// screens/organizador/programar_partidos_screen.dart
 import 'package:flutter/material.dart';
+import 'package:frontend_organizador/models/equipo.dart';
 import 'package:frontend_organizador/models/torneo.dart';
 import 'package:frontend_organizador/services/api_service.dart';
+import 'package:frontend_organizador/widgets/date_time_picker_widget.dart';
 
 class ProgramarPartidosScreen extends StatefulWidget {
   final Torneo torneo;
@@ -12,106 +15,40 @@ class ProgramarPartidosScreen extends StatefulWidget {
 }
 
 class _ProgramarPartidosScreenState extends State<ProgramarPartidosScreen> {
-  String _modo = 'manual'; // 'manual' o 'automatica'
-  List<Map<String, dynamic>> partidos = [];
-  bool _loading = false;
+  final _formKey = GlobalKey<FormState>();
+  String _tipoProgramacion = 'manual';
+  DateTime _fecha = DateTime.now();
+  TimeOfDay _hora = TimeOfDay.now();
+  String _lugar = '';
+  String? _equipoLocalId;
+  String? _equipoVisitanteId;
+  String? _capitanId;
+  List<String> _titulares = [];
+  List<String> _suplentes = [];
 
-  void _inicializarPartidos() {
-    if (widget.torneo.equipos.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("No hay equipos inscritos en este torneo")),
-      );
-      return;
-    }
+  List<Equipo> _equipos = [];
+  bool _loadingEquipos = true;
 
-    final List<Map<String, dynamic>> nuevosPartidos = [];
-    for (int i = 0; i < widget.torneo.equipos.length; i++) {
-      for (int j = i + 1; j < widget.torneo.equipos.length; j++) {
-        nuevosPartidos.add({
-          'local': widget.torneo.equipos[i],
-          'visitante': widget.torneo.equipos[j],
-          'fecha': null,
-          'hora': null,
-          'lugar': '',
-          'capitanLocal': '',
-          'capitanVisitante': '',
-          'jugadoresLocales': [],
-          'jugadoresVisitantes': [],
-        });
-      }
-    }
-
-    setState(() {
-      partidos = nuevosPartidos;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _cargarEquipos();
   }
 
-  Future<void> _generarCalendarioAutomatico() async {
-    setState(() => _loading = true);
-
-    try {
-      final DateTime inicio = widget.torneo.fechaInicio;
-      TimeOfDay horaInicio = TimeOfDay(hour: 16, minute: 0);
-
-      for (int i = 0; i < partidos.length; i++) {
-        final dias = i ~/ 3;
-        final horaOffset = (i % 3) * 2;
-
-        final fecha = inicio.add(Duration(days: dias));
-        final hora = TimeOfDay(hour: (horaInicio.hour + horaOffset) % 24, minute: horaInicio.minute);
-        final lugar = 'Cancha ${i % 3 + 1}';
-
-        setState(() {
-          partidos[i]['fecha'] = fecha;
-          partidos[i]['hora'] = hora;
-          partidos[i]['lugar'] = lugar;
-        });
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Calendario generado automáticamente")),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error al generar calendario")),
-      );
-    } finally {
-      setState(() => _loading = false);
-    }
-  }
-
-  Future<void> _guardarProgramacion() async {
-    setState(() => _loading = true);
-
-    final data = {
-      'torneoId': widget.torneo.id,
-      'modo': _modo,
-      'partidos': partidos.map((p) {
-        return {
-          'equipoLocal': p['local'],
-          'equipoVisitante': p['visitante'],
-          'fecha': p['fecha']?.toIso8601String(),
-          'hora': {'hour': p['hora'].hour, 'minute': p['hora'].minute},
-          'lugar': p['lugar'],
-          'capitanLocal': p['capitanLocal'],
-          'capitanVisitante': p['capitanVisitante'],
-          'jugadoresLocales': p['jugadoresLocales'],
-          'jugadoresVisitantes': p['jugadoresVisitantes'],
-        };
-      }).toList(),
-    };
-
-    final response = await ApiService.programarPartidos(data);
-    setState(() => _loading = false);
-
-    if (response['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Partidos programados correctamente")),
-      );
-      Navigator.pop(context, true);
+  Future<void> _cargarEquipos() async {
+    final response = await ApiService.getEquiposPorTorneo(widget.torneo.id);
+    print(response);
+    if (response['success'] == true && response['equipos'] is List) {
+      setState(() {
+        _equipos = (response['equipos'] as List).map((e) => Equipo.fromJson(e)).toList();
+        _loadingEquipos = false;
+      });
     } else {
+      setState(() {
+        _loadingEquipos = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: ${response['message'] ?? 'Desconocido'}")),
+        SnackBar(content: Text("Error al cargar equipos: ${response['message'] ?? 'Desconocido'}")),
       );
     }
   }
@@ -119,182 +56,192 @@ class _ProgramarPartidosScreenState extends State<ProgramarPartidosScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Programar Partidos")),
-      body: _loading
-          ? Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  DropdownButtonFormField<String>(
-                    value: _modo,
-                    decoration: InputDecoration(labelText: "Modo de programación"),
-                    items: [
-                      DropdownMenuItem(value: 'manual', child: Text("Manual")),
-                      DropdownMenuItem(value: 'automatica', child: Text("Automática")),
-                    ],
-                    onChanged: (v) {
-                      if (v != null) {
-                        setState(() {
-                          _modo = v;
-                          if (_modo == 'automatica') {
-                            _generarCalendarioAutomatico();
-                          }
-                        });
-                      }
-                    },
-                  ),
-                  SizedBox(height: 20),
-
-                  // Botón para generar automáticamente (solo en modo manual)
-                  if (_modo == 'manual')
-                    ElevatedButton.icon(
-                      onPressed: _generarCalendarioAutomatico,
-                      icon: Icon(Icons.auto_fix_high),
-                      label: Text("Generar automáticamente"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        padding: EdgeInsets.symmetric(vertical: 16),
+      appBar: AppBar(title: const Text("Programar Partidos")),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: _loadingEquipos
+            ? const Center(child: CircularProgressIndicator())
+            : Form(
+                key: _formKey,
+                child: ListView(
+                  children: [
+                    // ✅ Mostrar nombre del torneo
+                    Card(
+                      color: Theme.of(context).primaryColor,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          "Torneo: ${widget.torneo.nombre}",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
-                  SizedBox(height: 20),
+                    const SizedBox(height: 16),
 
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: partidos.length,
-                      itemBuilder: (context, index) {
-                        final partido = partidos[index];
-                        return _buildPartidoCard(partido, index);
+                    // Mostrar número de equipos
+                    if (_equipos.isNotEmpty)
+                      Text("${_equipos.length} equipos registrados"),
+                    const SizedBox(height: 16),
+
+                    // Tipo de programación
+                    DropdownButtonFormField<String>(
+                      value: _tipoProgramacion,
+                      items: const [
+                        DropdownMenuItem(value: 'manual', child: Text("Manual")),
+                        DropdownMenuItem(value: 'automatica', child: Text("Automática")),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _tipoProgramacion = value!;
+                        });
                       },
+                      decoration: const InputDecoration(labelText: "Tipo de programación"),
                     ),
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _guardarProgramacion,
-                    child: Text("Guardar Programación"),
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: Colors.blue,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-    );
-  }
+                    const SizedBox(height: 16),
 
-  Widget _buildPartidoCard(Map<String, dynamic> partido, int index) {
-    return Card(
-      margin: EdgeInsets.symmetric(vertical: 4),
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "${partido['local']} vs ${partido['visitante']}",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    readOnly: true,
-                    onTap: () async {
-                      final date = await showDatePicker(
-                        context: context,
-                        initialDate: partido['fecha'] ?? DateTime.now(),
-                        firstDate: widget.torneo.fechaInicio,
-                        lastDate: widget.torneo.fechaFin,
-                      );
-                      if (date != null) {
-                        setState(() {
-                          partido['fecha'] = date;
-                        });
-                      }
-                    },
-                    decoration: InputDecoration(
-                      labelText: "Fecha",
-                      hintText: partido['fecha'] != null
-                          ? "${partido['fecha'].day}/${partido['fecha'].month}/${partido['fecha'].year}"
-                          : "Seleccionar",
+                    // ✅ Solo si es manual, mostrar campos
+                    if (_tipoProgramacion == 'manual') ...[
+                      if (_equipos.isEmpty)
+                        const Text("No hay equipos registrados en este torneo.")
+                      else ...[
+                        // Selector de equipo local
+                        DropdownButtonFormField<String>(
+                          value: _equipoLocalId,
+                          items: _equipos.map<DropdownMenuItem<String>>((e) {
+                            return DropdownMenuItem(
+                              value: e.id,
+                              child: Text(e.nombre),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _equipoLocalId = value;
+                              // Limpiar visitante si era el mismo
+                              if (_equipoVisitanteId == value) {
+                                _equipoVisitanteId = null;
+                              }
+                            });
+                          },
+                          decoration: const InputDecoration(labelText: "Equipo Local"),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Selector de equipo visitante (excluye el local)
+                        DropdownButtonFormField<String>(
+                          value: _equipoVisitanteId,
+                          items: _equipos
+                              .map<DropdownMenuItem<String>?>((e) {
+                                if (e.id == _equipoLocalId) return null;
+                                return DropdownMenuItem(
+                                  value: e.id,
+                                  child: Text(e.nombre),
+                                );
+                              })
+                              .where((item) => item != null)
+                              .cast<DropdownMenuItem<String>>()
+                              .toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _equipoVisitanteId = value;
+                            });
+                          },
+                          decoration: const InputDecoration(labelText: "Equipo Visitante"),
+                        ),
+                        const SizedBox(height: 16),
+
+                        DateTimePickerWidget(
+                          labelText: "Fecha y Hora",
+                          selectedDate: _fecha,
+                          selectedTime: _hora,
+                          onDateSelected: (date) {
+                            setState(() {
+                              _fecha = date;
+                            });
+                          },
+                          onTimeSelected: (time) {
+                            setState(() {
+                              _hora = time;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        TextFormField(
+                          decoration: const InputDecoration(labelText: "Lugar"),
+                          onChanged: (value) {
+                            _lugar = value;
+                          },
+                          validator: (value) {
+                            if (value == null || value.isEmpty) return 'Requerido';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ],
+
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () async {
+                        print('🆔 Torneo ID: ${widget.torneo.id}');
+
+                        if (_tipoProgramacion == 'automatica') {
+                          final response = await ApiService.programarPartido({
+                            'tipoProgramacion': 'automatica',
+                            'torneoId': widget.torneo.id,
+                          });
+
+                          if (response['success'] == true) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Partidos programados automáticamente")),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Error: ${response['message'] ?? 'Desconocido'}")),
+                            );
+                          }
+                        } else {
+                          if (_formKey.currentState!.validate()) {
+                            if (_equipoLocalId == null || _equipoVisitanteId == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Selecciona ambos equipos")),
+                              );
+                              return;
+                            }
+
+                            final response = await ApiService.programarPartido({
+                              'tipoProgramacion': 'manual',
+                              'fecha': _fecha.toIso8601String(),
+                              'hora': _hora.format(context),
+                              'lugar': _lugar,
+                              'equipoLocalId': _equipoLocalId,
+                              'equipoVisitanteId': _equipoVisitanteId,
+                              'capitanId': _capitanId,
+                              'titulares': _titulares,
+                              'suplentes': _suplentes,
+                            });
+
+                            if (response['success'] == true) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Partido programado exitosamente")),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Error: ${response['message'] ?? 'Desconocido'}")),
+                              );
+                            }
+                          }
+                        }
+                      },
+                      child: const Text("Programar Partidos"),
                     ),
-                    initialValue: partido['fecha'] != null
-                        ? "${partido['fecha'].day}/${partido['fecha'].month}/${partido['fecha'].year}"
-                        : null,
-                  ),
+                  ],
                 ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    readOnly: true,
-                    onTap: () async {
-                      final time = await showTimePicker(
-                        context: context,
-                        initialTime: partido['hora'] ?? TimeOfDay.now(),
-                      );
-                      if (time != null) {
-                        setState(() {
-                          partido['hora'] = time;
-                        });
-                      }
-                    },
-                    decoration: InputDecoration(
-                      labelText: "Hora",
-                      hintText: partido['hora']?.format(context) ?? "Seleccionar",
-                    ),
-                    initialValue: partido['hora']?.format(context),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12),
-            TextFormField(
-              decoration: InputDecoration(labelText: "Lugar"),
-              initialValue: partido['lugar'],
-              onChanged: (v) => partido['lugar'] = v,
-            ),
-            SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    decoration: InputDecoration(labelText: "Capitán Local"),
-                    initialValue: partido['capitanLocal'],
-                    onChanged: (v) => partido['capitanLocal'] = v,
-                  ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    decoration: InputDecoration(labelText: "Capitán Visitante"),
-                    initialValue: partido['capitanVisitante'],
-                    onChanged: (v) => partido['capitanVisitante'] = v,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12),
-            Text("Jugadores Titulares y Suplentes", style: TextStyle(fontWeight: FontWeight.bold)),
-            SizedBox(height: 8),
-            TextFormField(
-              maxLines: 3,
-              decoration: InputDecoration(labelText: "Jugadores Locales"),
-              onChanged: (v) {
-                partido['jugadoresLocales'] = v.split('\n').where((e) => e.trim().isNotEmpty).toList();
-              },
-            ),
-            SizedBox(height: 8),
-            TextFormField(
-              maxLines: 3,
-              decoration: InputDecoration(labelText: "Jugadores Visitantes"),
-              onChanged: (v) {
-                partido['jugadoresVisitantes'] = v.split('\n').where((e) => e.trim().isNotEmpty).toList();
-              },
-            ),
-          ],
-        ),
+              ),
       ),
     );
   }

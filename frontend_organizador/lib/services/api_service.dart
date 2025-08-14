@@ -9,7 +9,7 @@ import '../models/notificacion.dart';
 import '../models/equipo.dart'; // ✅ Importa el modelo Equipo
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.0.6:3000/api';
+  static const String baseUrl = 'http://172.16.82.29:3000/api';
 
   // === TORNEOS ===
   static Future<Map<String, dynamic>> crearTorneo(Map<String, dynamic> data) async {
@@ -435,4 +435,46 @@ class ApiService {
       return {'success': false, 'message': 'Error de conexión con el servidor'};
     }
   }
+  // === PARTIDOS ===
+static Future<Map<String, dynamic>> programarPartido(Map<String, dynamic> data) async {
+  final token = await AuthService.getToken();
+  final url = Uri.parse('$baseUrl/partidos/programar');
+
+  try {
+    final response = await http.post(
+      url,
+      headers: {
+        'x-auth-token': token!,
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(data),
+    );
+
+    final json = jsonDecode(response.body);
+    return json;
+  } catch (e) {
+    print('❌ Error al programar partido: $e');
+    return {'success': false, 'message': 'Error de conexión'};
+  }
+}
+// === EQUIPOS ===
+static Future<Map<String, dynamic>> getEquiposPorTorneo(String torneoId) async {
+  final token = await AuthService.getToken();
+  final url = Uri.parse('$baseUrl/equipos/torneo/$torneoId');
+
+  try {
+    final response = await http.get(
+      url,
+      headers: {
+        'x-auth-token': token!,
+        'Content-Type': 'application/json',
+      },
+    );
+
+    return jsonDecode(response.body);
+  } catch (e) {
+    print('❌ Error al obtener equipos por torneo: $e');
+    return {'success': false, 'message': 'Error de conexión'};
+  }
+}
 }
