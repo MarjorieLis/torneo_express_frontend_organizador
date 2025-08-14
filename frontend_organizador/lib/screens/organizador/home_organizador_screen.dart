@@ -1,8 +1,11 @@
+// lib/screens/organizador/home_organizador_screen.dart
 import 'package:flutter/material.dart';
-import 'package:frontend_organizador/models/torneo.dart';
 import 'package:frontend_organizador/screens/organizador/aprobacion_equipos_screen.dart.dart';
+// ✅ Cambia el import incorrecto por el correcto
+// import 'package:frontend_organizador/screens/organizador/aprobacion_equipos_screen.dart';
+import 'package:frontend_organizador/screens/organizador/gestion_equipos_screen.dart'; // ✅ Correcto
+
 import 'package:frontend_organizador/screens/organizador/crear_torneo_screen.dart';
-import 'package:frontend_organizador/screens/organizador/gestion_equipos_screen.dart';
 import 'package:frontend_organizador/screens/organizador/historial_torneos_screen.dart';
 import 'package:frontend_organizador/screens/organizador/notificaciones_screen.dart';
 import 'package:frontend_organizador/screens/organizador/estadisticas_screen.dart';
@@ -15,21 +18,6 @@ import 'package:frontend_organizador/screens/organizador/torneos_screen.dart';
 class HomeOrganizadorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // ⚠️ Torneo de ejemplo solo para navegar a ProgramarPartidosScreen
-    final torneoEjemplo = Torneo(
-      id: '1',
-      nombre: 'Torneo de Ejemplo',
-      disciplina: 'Fútbol',
-      fechaInicio: DateTime.now(),
-      fechaFin: DateTime.now().add(Duration(days: 7)),
-      maxEquipos: 8,
-      reglas: 'Reglas básicas',
-      formato: 'Eliminación directa',
-      estado: 'activo',
-      equipos: [],
-      partidos: [],
-    );
-
     return Scaffold(
       appBar: AppBar(
         title: Text("Torneo Express - Organizador"),
@@ -63,7 +51,7 @@ class HomeOrganizadorScreen extends StatelessWidget {
               leading: Icon(Icons.check_circle_outline),
               title: Text('Equipos Aprobados'),
               onTap: () => Navigator.pushNamed(context, Routes.equiposAprobados),
-              ),
+            ),
             ListTile(
               leading: Icon(Icons.history),
               title: Text("Historial de Torneos"),
@@ -78,7 +66,10 @@ class HomeOrganizadorScreen extends StatelessWidget {
               leading: Icon(Icons.notifications),
               title: Text("Notificaciones"),
               onTap: () {
-                // Navegar a notificaciones
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => NotificacionesScreen()),
+                );
               },
             ),
           ],
@@ -94,12 +85,16 @@ class HomeOrganizadorScreen extends StatelessWidget {
         ),
         children: [
           ActionCard(icon: Icons.add, label: "Crear Torneo", route: CrearTorneoScreen()),
-          //ActionCard(icon: Icons.group, label: "Aprobar Equipos", route: GestionEquiposScreen()),
-          ActionCard(icon: Icons.group, label: "Aprobar Equipos", route: AprobacionEquiposScreen()),
+          // ✅ Usa GestionEquiposScreen si es el correcto
+          ActionCard(
+            icon: Icons.group,
+            label: "Aprobar Equipos",
+            route: AprobacionEquiposScreen(),
+          ),
           ActionCard(
             icon: Icons.event,
             label: "Programar Partidos",
-            route: ProgramarPartidosScreen(torneo: torneoEjemplo), // ✅ Corregido aquí
+            route: ProgramarPartidosScreen(),
           ),
           ActionCard(icon: Icons.notifications, label: "Notificar", route: NotificacionesScreen()),
           ActionCard(icon: Icons.analytics, label: "Estadísticas", route: EstadisticasScreen()),

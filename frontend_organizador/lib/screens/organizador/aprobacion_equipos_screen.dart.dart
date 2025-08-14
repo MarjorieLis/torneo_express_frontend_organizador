@@ -1,3 +1,4 @@
+// screens/organizador/aprobacion_equipos_screen.dart
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:frontend_organizador/models/equipo.dart';
@@ -9,8 +10,7 @@ class AprobacionEquiposScreen extends StatefulWidget {
   const AprobacionEquiposScreen({Key? key}) : super(key: key);
 
   @override
-  _AprobacionEquiposScreenState createState() =>
-      _AprobacionEquiposScreenState();
+  _AprobacionEquiposScreenState createState() => _AprobacionEquiposScreenState();
 }
 
 class _AprobacionEquiposScreenState extends State<AprobacionEquiposScreen> {
@@ -27,23 +27,33 @@ class _AprobacionEquiposScreenState extends State<AprobacionEquiposScreen> {
     print('🔄 [AprobacionEquiposScreen] Iniciando carga de equipos...');
     setState(() => _loading = true);
 
-    final token = await AuthService.getToken();
-    print('🔐 Token: $token');
+    try {
+      // ✅ ApiService.obtenerEquiposPendientes() devuelve Map<String, dynamic>
+      final response = await ApiService.obtenerEquiposPendientes();
 
-    final response = await ApiService.obtenerEquiposPendientes();
-    print('📥 Respuesta del backend: $response');
+      // ✅ Verifica si la respuesta es exitosa y tiene equipos
+      if (response['success'] == true && response['equipos'] is List) {
+        final List<Equipo> equipos = (response['equipos'] as List)
+            .map((e) => Equipo.fromJson(e))
+            .toList();
 
-    if (response['success'] == true && response['equipos'] is List) {
-      final List<Equipo> equipos =
-          (response['equipos'] as List).map((e) => Equipo.fromJson(e)).toList();
-
+        setState(() {
+          equiposPendientes = equipos;
+          _loading = false;
+        });
+      } else {
+        print('⚠️ No hay equipos pendientes: ${response['message']}');
+        setState(() {
+          equiposPendientes = [];
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      print('❌ Error al procesar equipos pendientes: $e');
       setState(() {
-        equiposPendientes = equipos;
+        equiposPendientes = [];
         _loading = false;
       });
-    } else {
-      print('⚠️ No hay equipos pendientes: ${response['message']}');
-      setState(() => _loading = false);
     }
   }
 
@@ -67,8 +77,7 @@ class _AprobacionEquiposScreenState extends State<AprobacionEquiposScreen> {
                           const SizedBox(height: 12),
                           Text(
                             "No hay equipos pendientes",
-                            style: txt.titleMedium
-                                ?.copyWith(color: cs.onSurfaceVariant),
+                            style: txt.titleMedium?.copyWith(color: cs.onSurfaceVariant),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 8),
@@ -96,21 +105,15 @@ class _AprobacionEquiposScreenState extends State<AprobacionEquiposScreen> {
                           return EquipoCard(
                             equipo: e,
                             onAprobar: () async {
-                              // ✅ Llama al backend para aprobar
                               final success = await ApiService.aprobarEquipo(e.id);
-
                               if (success) {
-                                // ✅ Remueve de la lista local
                                 setState(() {
                                   equiposPendientes.remove(e);
                                 });
-
-                                // ✅ Mensaje de éxito
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Text("${e.nombre} aprobado")),
                                 );
                               } else {
-                                // ✅ Error
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text("Error al aprobar ${e.nombre}"),
@@ -121,12 +124,10 @@ class _AprobacionEquiposScreenState extends State<AprobacionEquiposScreen> {
                             },
                             onRechazar: () async {
                               final success = await ApiService.rechazarEquipo(e.id);
-
                               if (success) {
                                 setState(() {
                                   equiposPendientes.remove(e);
                                 });
-
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Text("${e.nombre} rechazado")),
                                 );
