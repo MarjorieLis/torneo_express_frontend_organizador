@@ -82,7 +82,7 @@ class EquipoCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            jugador.nombre,
+                            jugador.nombreCompleto,
                             style: txt.bodySmall?.copyWith(
                               color: cs.onPrimaryContainer,
                               fontWeight: FontWeight.w500,

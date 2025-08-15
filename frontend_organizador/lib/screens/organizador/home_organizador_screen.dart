@@ -7,8 +7,6 @@ import 'package:frontend_organizador/screens/organizador/gestion_equipos_screen.
 
 import 'package:frontend_organizador/screens/organizador/crear_torneo_screen.dart';
 import 'package:frontend_organizador/screens/organizador/historial_torneos_screen.dart';
-import 'package:frontend_organizador/screens/organizador/notificaciones_screen.dart';
-import 'package:frontend_organizador/screens/organizador/estadisticas_screen.dart';
 import 'package:frontend_organizador/screens/organizador/programar_partidos_screen.dart';
 import 'package:frontend_organizador/widgets/tournament_card.dart';
 import 'package:frontend_organizador/services/auth_service.dart';
@@ -62,16 +60,6 @@ class HomeOrganizadorScreen extends StatelessWidget {
                 );
               },
             ),
-            ListTile(
-              leading: Icon(Icons.notifications),
-              title: Text("Notificaciones"),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => NotificacionesScreen()),
-                );
-              },
-            ),
           ],
         ),
       ),
@@ -96,8 +84,6 @@ class HomeOrganizadorScreen extends StatelessWidget {
             label: "Programar Partidos",
             route: ProgramarPartidosScreen(),
           ),
-          ActionCard(icon: Icons.notifications, label: "Notificar", route: NotificacionesScreen()),
-          ActionCard(icon: Icons.analytics, label: "Estadísticas", route: EstadisticasScreen()),
           ActionCard(icon: Icons.history, label: "Historial", route: HistorialTorneosScreen()),
         ],
       ),

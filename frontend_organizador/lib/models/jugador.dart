@@ -18,7 +18,7 @@ class Jugador {
   final int faltas;
   final int tarjetasAmarillas;
   final int tarjetasRojas;
-  final String? equipoId; // ✅ Campo clave
+  final String? equipoId;
 
   Jugador({
     required this.id,
@@ -42,36 +42,45 @@ class Jugador {
     this.equipoId,
   });
 
-  factory Jugador.fromJson(Map<String, dynamic> json) {
-    return Jugador(
-      id: json['id'] ?? '',
-      nombreCompleto: json['nombre_completo'] ?? 'Sin nombre',
-      email: json['email'] ?? '',
-      cedula: json['cedula'] ?? 'Sin cédula',
-      edad: json['edad'] ?? 0,
-      posicionPrincipal: json['posicion_principal'] ?? '',
-      posicionSecundaria: json['posicion_secundaria'],
-      numeroCamiseta: json['numero_camiseta'] ?? 0,
-      telefono: json['telefono'] ?? '',
-      descripcion: json['descripcion'] ?? '',
-      metas: json['metas'] ?? '',
-      fotoPerfil: json['foto_perfil'],
-      partidosJugados: json['partidos_jugados'] ?? 0,
-      goles: json['goles'] ?? 0,
-      asistencias: json['asistencias'] ?? 0,
-      faltas: json['faltas'] ?? 0,
-      tarjetasAmarillas: json['tarjetas_amarillas'] ?? 0,
-      tarjetasRojas: json['tarjetas_rojas'] ?? 0,
-      equipoId: json['equipoId'] ?? json['equipo_id'],
-    );
+  // models/jugador.dart
+factory Jugador.fromJson(Map<String, dynamic> json) {
+  // Función auxiliar para convertir String a int
+  int parseInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
   }
+
+  return Jugador(
+    id: json['id'] ?? '',
+    nombreCompleto: json['nombre_completo'] ?? 'Sin nombre',
+    email: json['email'] ?? '',
+    cedula: json['cedula'] ?? '',
+    edad: parseInt(json['edad']),
+    posicionPrincipal: json['posicion_principal'] ?? '',
+    posicionSecundaria: json['posicion_secundaria'],
+    numeroCamiseta: parseInt(json['numero_camiseta']),
+    telefono: json['telefono'] ?? '',
+    descripcion: json['descripcion'] ?? '',
+    metas: json['metas'] ?? '',
+    fotoPerfil: json['foto_perfil'],
+    partidosJugados: parseInt(json['partidos_jugados']),
+    goles: parseInt(json['goles']),
+    asistencias: parseInt(json['asistencias']),
+    faltas: parseInt(json['faltas']),
+    tarjetasAmarillas: parseInt(json['tarjetas_amarillas']),
+    tarjetasRojas: parseInt(json['tarjetas_rojas']),
+    equipoId: json['equipoId'] ?? json['equipo_id'],
+  );
+}
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'nombre_completo': nombreCompleto,
       'email': email,
-      'cedula': cedula, 
+      'cedula': cedula,
       'edad': edad,
       'posicion_principal': posicionPrincipal,
       'posicion_secundaria': posicionSecundaria,

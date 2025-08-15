@@ -1,3 +1,4 @@
+// services/api_service.dart
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:frontend_organizador/services/auth_service.dart';
@@ -6,10 +7,11 @@ import 'package:frontend_organizador/services/auth_service.dart';
 import '../models/torneo.dart';
 import '../models/partido.dart';
 import '../models/notificacion.dart';
-import '../models/equipo.dart'; // ✅ Importa el modelo Equipo
+import '../models/equipo.dart';
+import '../models/jugador.dart'; // ✅ Importa Jugador aquí
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.0.12:3000/api';
+  static const String baseUrl = 'http://192.168.0.9:3000/api';
 
   // === TORNEOS ===
   static Future<Map<String, dynamic>> crearTorneo(Map<String, dynamic> data) async {
@@ -22,35 +24,26 @@ class ApiService {
       },
       body: jsonEncode(data),
     );
-
-    final result = jsonDecode(response.body);
-    return result;
+    return jsonDecode(response.body);
   }
 
   static Future<List<Torneo>> getTorneos() async {
     final token = await AuthService.getToken();
     final response = await http.get(
       Uri.parse('$baseUrl/torneos'),
-      headers: {
-        'x-auth-token': token!,
-      },
+      headers: {'x-auth-token': token!},
     );
 
     final result = jsonDecode(response.body);
-    print('🔍 Respuesta /torneos: $result');
     if (response.statusCode == 200 && result['success'] == true) {
       final List jsonList = result['torneos'];
       return jsonList.map((json) => Torneo.fromJson(json)).toList();
     } else {
-      print('❌ Error: ${result['message'] ?? 'Desconocido'}');
       return [];
     }
   }
 
-  // ✅ Alias en español: obtenerTorneos
-  static Future<List<Torneo>> obtenerTorneos() async {
-    return await getTorneos(); // Reutiliza la lógica
-  }
+  static Future<List<Torneo>> obtenerTorneos() async => await getTorneos();
 
   static Future<Map<String, dynamic>> editarTorneo(String id, Map<String, dynamic> data) async {
     final token = await AuthService.getToken();
@@ -92,229 +85,180 @@ class ApiService {
   // === EQUIPOS ===
   static Future<Map<String, dynamic>> obtenerEquiposPendientes() async {
     final token = await AuthService.getToken();
-    print('🔐 Token: $token');
-    if (token == null) {
-      return {'success': false, 'message': 'No autenticado'};
-    }
+    if (token == null) return {'success': false, 'message': 'No autenticado'};
 
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/equipos/pendientes'),
-        headers: {
-          'Content-Type': 'application/json',
-          'x-auth-token': token,
-        },
+        headers: {'x-auth-token': token},
       );
-
-      print('📡 Estado: ${response.statusCode}');
-      print('📦 Cuerpo: ${response.body}');
-
       return jsonDecode(response.body);
     } catch (e) {
-      print('❌ Error en la petición: $e');
       return {'success': false, 'message': 'Error de conexión'};
     }
   }
 
   static Future<bool> aprobarEquipo(String equipoId) async {
     final token = await AuthService.getToken();
-    final url = Uri.parse('$baseUrl/equipos/aprobado/$equipoId');
-
     try {
       final response = await http.put(
-        url,
-        headers: {
-          'x-auth-token': token!,
-          'Content-Type': 'application/json',
-        },
+        Uri.parse('$baseUrl/equipos/aprobado/$equipoId'),
+        headers: {'x-auth-token': token!},
       );
-
       final json = jsonDecode(response.body);
       return json['success'] == true;
     } catch (e) {
-      print('❌ Error al aprobar equipo: $e');
       return false;
     }
   }
 
   static Future<bool> rechazarEquipo(String equipoId) async {
     final token = await AuthService.getToken();
-    final url = Uri.parse('$baseUrl/equipos/rechazado/$equipoId');
-
     try {
       final response = await http.put(
-        url,
-        headers: {
-          'x-auth-token': token!,
-          'Content-Type': 'application/json',
-        },
+        Uri.parse('$baseUrl/equipos/rechazado/$equipoId'),
+        headers: {'x-auth-token': token!},
       );
-
       final json = jsonDecode(response.body);
       return json['success'] == true;
     } catch (e) {
-      print('❌ Error al rechazar equipo: $e');
       return false;
     }
   }
 
   static Future<Map<String, dynamic>> crearEquipo(String cuerpo) async {
     final token = await AuthService.getToken();
-    print('🔐 Token: $token');
-    if (token == null) {
-      return {'success': false, 'message': 'No autenticado'};
-    }
+    if (token == null) return {'success': false, 'message': 'No autenticado'};
 
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/equipos'),
-        headers: {
-          'Content-Type': 'application/json',
-          'x-auth-token': token,
-        },
+        headers: {'x-auth-token': token},
         body: cuerpo,
       );
-
-      print('📡 Estado: ${response.statusCode}');
-      print('📦 Cuerpo: ${response.body}');
-
       return jsonDecode(response.body);
     } catch (e) {
-      print('❌ Error en la petición: $e');
       return {'success': false, 'message': 'Error de conexión'};
     }
   }
 
   static Future<List<Equipo>> obtenerEquiposAprobados() async {
     final token = await AuthService.getToken();
-    print('🔐 Token: $token');
-
-    if (token == null) {
-      return [];
-    }
+    if (token == null) return [];
 
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/equipos/aprobados'),
-        headers: {
-          'x-auth-token': token,
-          'Content-Type': 'application/json',
-        },
+        headers: {'x-auth-token': token},
       );
-
-      print('📡 Estado: ${response.statusCode}');
-      print('📦 Cuerpo: ${response.body}');
-
       final data = jsonDecode(response.body);
-      if (response.statusCode == 200 && data['success'] == true && data['equipos'] is List) {
+      if (data['success'] == true && data['equipos'] is List) {
         return (data['equipos'] as List).map((e) => Equipo.fromJson(e)).toList();
-      } else {
-        print('⚠️ No hay equipos aprobados: ${data['message']}');
-        return [];
       }
+      return [];
     } catch (e) {
-      print('❌ Error en la petición: $e');
       return [];
     }
   }
 
   // === JUGADORES ===
-  static Future<Map<String, dynamic>> obtenerJugadoresDisponibles(String torneoId) async {
-    final token = await AuthService.getToken();
-    print('🔐 Token: $token');
+static Future<List<Jugador>> obtenerJugadoresDisponibles() async {
+  final token = await AuthService.getToken();
+  if (token == null) return [];
 
-    if (token == null) {
-      return {'success': false, 'message': 'No autenticado'};
+  try {
+    final response = await http.get(
+      Uri.parse('$baseUrl/jugadores/disponibles'),
+      headers: {'x-auth-token': token},
+    );
+
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200 && data['success'] == true && data['jugadores'] is List) {
+      return (data['jugadores'] as List).map((j) => Jugador.fromJson(j)).toList();
     }
+    return [];
+  } catch (e) {
+    print('❌ Error: $e');
+    return [];
+  }
+}
+static Future<Map<String, dynamic>> asignarJugadoresAlEquipo(String equipoId, List<String> jugadorIds) async {
+  final token = await AuthService.getToken();
+  if (token == null) return {'success': false, 'message': 'No autenticado'};
+
+  try {
+    final response = await http.put(
+      Uri.parse('$baseUrl/equipos/$equipoId/jugadores'), // ✅ Verifica que esta ruta coincida con el backend
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token,
+      },
+      body: jsonEncode({'jugadorIds': jugadorIds}),
+    );
+
+    // ✅ Agrega este print para depurar
+    print('📡 Respuesta del backend: ${response.body}');
+
+    return jsonDecode(response.body);
+  } catch (e) {
+    print('❌ Error al asignar jugadores: $e');
+    return {'success': false, 'message': 'Error de conexión'};
+  }
+}
+
+  static Future<Map<String, dynamic>> asignarJugadores(String equipoId, List<String> jugadorIds) async {
+    final token = await AuthService.getToken();
+    if (token == null) return {'success': false, 'message': 'No autenticado'};
 
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/jugadores/disponibles'),
+      final response = await http.put(
+        Uri.parse('$baseUrl/equipos/$equipoId/asignar-jugadores'),
         headers: {
           'Content-Type': 'application/json',
           'x-auth-token': token,
         },
+        body: jsonEncode({'jugadorIds': jugadorIds}),
       );
-
-      print('📡 Estado: ${response.statusCode}');
-      print('📦 Cuerpo: ${response.body}');
-
       return jsonDecode(response.body);
     } catch (e) {
-      print('❌ Error en la petición: $e');
       return {'success': false, 'message': 'Error de conexión'};
     }
   }
 
   static Future<Map<String, dynamic>> buscarJugador(String query) async {
     final token = await AuthService.getToken();
-    print('🔐 Token: $token');
-    if (token == null) {
-      return {'success': false, 'message': 'No autenticado'};
-    }
+    if (token == null) return {'success': false, 'message': 'No autenticado'};
 
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/jugadores/buscar?query=$query'),
-        headers: {
-          'Content-Type': 'application/json',
-          'x-auth-token': token,
-        },
+        headers: {'x-auth-token': token},
       );
-
-      print('📡 Estado: ${response.statusCode}');
-      print('📦 Cuerpo: ${response.body}');
-
       return jsonDecode(response.body);
     } catch (e) {
-      print('❌ Error en la petición: $e');
       return {'success': false, 'message': 'Error de conexión'};
     }
   }
 
-  // === INSCRIPCIONES Y PARTIDOS ===
+  // === INSCRIPCIONES ===
   static Future<Map<String, dynamic>> obtenerTorneosDisponibles() async {
     final token = await AuthService.getToken();
-    print('🔐 Token: $token');
-
-    if (token == null) {
-      return {'success': false, 'message': 'No autenticado'};
-    }
+    if (token == null) return {'success': false, 'message': 'No autenticado'};
 
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/torneos/disponibles'),
-        headers: {
-          'Content-Type': 'application/json',
-          'x-auth-token': token,
-        },
+        headers: {'x-auth-token': token},
       );
-
-      print('📡 Estado: ${response.statusCode}');
-      print('📦 Cuerpo: ${response.body}');
-
-      final data = jsonDecode(response.body);
-      if (response.statusCode == 200 && data['success'] == true) {
-        return data;
-      } else {
-        return {
-          'success': false,
-          'message': data['message'] ?? 'Error desconocido'
-        };
-      }
+      return jsonDecode(response.body);
     } catch (e) {
-      print('❌ Error en la petición: $e');
       return {'success': false, 'message': 'Error de conexión'};
     }
   }
 
   static Future<Map<String, dynamic>> inscribirEquipo(String torneoId, String equipoId) async {
     final token = await AuthService.getToken();
-    print('🔐 Token: $token');
-
-    if (token == null) {
-      return {'success': false, 'message': 'No autenticado'};
-    }
+    if (token == null) return {'success': false, 'message': 'No autenticado'};
 
     try {
       final response = await http.post(
@@ -325,98 +269,60 @@ class ApiService {
         },
         body: jsonEncode({'equipoId': equipoId}),
       );
-
-      print('📡 Estado: ${response.statusCode}');
-      print('📦 Cuerpo: ${response.body}');
-
       return jsonDecode(response.body);
     } catch (e) {
-      print('❌ Error en la petición: $e');
       return {'success': false, 'message': 'Error de conexión'};
     }
   }
 
-  static Future<Map<String, dynamic>> programarPartidos(Map<String, dynamic> data) async {
+  // === PARTIDOS ===
+  static Future<Map<String, dynamic>> programarPartido(Map<String, dynamic> data) async {
     final token = await AuthService.getToken();
-    final response = await http.post(
-      Uri.parse('$baseUrl/partidos/programar'),
-      headers: {
-        'Content-Type': 'application/json',
-        'x-auth-token': token!,
-      },
-      body: jsonEncode(data),
-    );
-    return jsonDecode(response.body);
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/partidos/programar'),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': token!,
+        },
+        body: jsonEncode(data),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Error de conexión'};
+    }
   }
 
-  // === NOTIFICACIONES ===
-  static Future<List<Notificacion>> obtenerNotificaciones() async {
+  // === EQUIPOS (por torneo) ===
+  static Future<Map<String, dynamic>> getEquiposPorTorneo(String torneoId) async {
     final token = await AuthService.getToken();
-    final url = Uri.parse('$baseUrl/notificaciones');
-
     try {
       final response = await http.get(
-        url,
-        headers: {
-          'x-auth-token': token!,
-          'Content-Type': 'application/json',
-        },
+        Uri.parse('$baseUrl/equipos/torneo/$torneoId'),
+        headers: {'x-auth-token': token!},
       );
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Error de conexión'};
+    }
+  }
 
+  // === OTRAS FUNCIONES ===
+  static Future<List<Notificacion>> obtenerNotificaciones() async {
+    final token = await AuthService.getToken();
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/notificaciones'),
+        headers: {'x-auth-token': token!},
+      );
       if (response.statusCode == 200) {
         final List<dynamic> jsonList = jsonDecode(response.body);
         return jsonList.map((json) => Notificacion.fromJson(json)).toList();
-      } else {
-        print('❌ Error al obtener notificaciones: ${response.statusCode}');
-        return [];
       }
+      return [];
     } catch (e) {
-      print('❌ Error de conexión a notificaciones: $e');
       return [];
     }
-  }
-
-  static Future<Map<String, dynamic>> enviarNotificacion(Map<String, dynamic> data) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/notificaciones'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(data),
-    );
-    return jsonDecode(response.body);
-  }
-
-  // === ESTADÍSTICAS Y HISTORIAL ===
-  static Future<Map<String, dynamic>> getEstadisticas(String torneoId) async {
-    final response = await http.get(Uri.parse('$baseUrl/torneos/$torneoId/estadisticas'));
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    }
-    return {};
-  }
-
-  static Future<List<dynamic>> getTorneosPasados() async {
-    final response = await http.get(Uri.parse('$baseUrl/torneos/historial'));
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    }
-    return [];
-  }
-
-  static Future<List<dynamic>> getEquiposPorEstado(String estado) async {
-    final response = await http.get(Uri.parse('$baseUrl/equipos?estado=$estado'));
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    }
-    return [];
-  }
-
-  static Future<Map<String, dynamic>> actualizarEstadoEquipo(String id, String estado) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/equipos/$id'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'estado': estado}),
-    );
-    return jsonDecode(response.body);
   }
 
   static Future<Map<String, dynamic>> register(Map<String, dynamic> data) async {
@@ -426,62 +332,61 @@ class ApiService {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(data),
       );
-
       final result = jsonDecode(response.body);
-
       if (response.statusCode == 201 || response.statusCode == 200) {
         return {'success': true, 'token': result['token'], 'usuario': result['usuario']};
-      } else {
-        return {'success': false, 'message': result['message'] ?? 'Error en el registro'};
       }
+      return {'success': false, 'message': result['message'] ?? 'Error'};
     } catch (e) {
-      print('❌ Error en register: $e');
-      return {'success': false, 'message': 'Error de conexión con el servidor'};
-    }
-  }
-
-  // === PARTIDOS ===
-  static Future<Map<String, dynamic>> programarPartido(Map<String, dynamic> data) async {
-    final token = await AuthService.getToken();
-    final url = Uri.parse('$baseUrl/partidos/programar');
-
-    try {
-      final response = await http.post(
-        url,
-        headers: {
-          'x-auth-token': token!,
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(data),
-      );
-
-      final json = jsonDecode(response.body);
-      return json;
-    } catch (e) {
-      print('❌ Error al programar partido: $e');
       return {'success': false, 'message': 'Error de conexión'};
     }
   }
+  // services/api_service.dart
+// === EQUIPOS ===
 
-  // === EQUIPOS ===
-  static Future<Map<String, dynamic>> getEquiposPorTorneo(String torneoId) async {
-    final token = await AuthService.getToken();
-    final url = Uri.parse('$baseUrl/equipos/torneo/$torneoId');
+// ✅ Método: getEquiposPorEstado
+static Future<List<Equipo>> getEquiposPorEstado(String estado) async {
+  final token = await AuthService.getToken();
+  if (token == null) return [];
 
-    try {
-      final response = await http.get(
-        url,
-        headers: {
-          'x-auth-token': token!,
-          'Content-Type': 'application/json',
-        },
-      );
+  try {
+    final response = await http.get(
+      Uri.parse('$baseUrl/equipos?estado=$estado'),
+      headers: {'x-auth-token': token},
+    );
 
-      return jsonDecode(response.body);
-    } catch (e) {
-      print('❌ Error al obtener equipos por torneo: $e');
-      return {'success': false, 'message': 'Error de conexión'};
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200 && data['success'] == true && data['equipos'] is List) {
+      return (data['equipos'] as List).map((e) => Equipo.fromJson(e)).toList();
+    } else {
+      print('⚠️ ${data['message'] ?? 'No hay equipos con estado: $estado'}');
+      return [];
     }
+  } catch (e) {
+    print('❌ Error al obtener equipos por estado: $e');
+    return [];
   }
-  
+}
+
+// ✅ Método: actualizarEstadoEquipo
+static Future<Map<String, dynamic>> actualizarEstadoEquipo(String id, String estado) async {
+  final token = await AuthService.getToken();
+  if (token == null) return {'success': false, 'message': 'No autenticado'};
+
+  try {
+    final response = await http.put(
+      Uri.parse('$baseUrl/equipos/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token,
+      },
+      body: jsonEncode({'estado': estado}),
+    );
+
+    return jsonDecode(response.body);
+  } catch (e) {
+    print('❌ Error al actualizar estado del equipo: $e');
+    return {'success': false, 'message': 'Error de conexión'};
+  }
+}
 }

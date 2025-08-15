@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+// models/equipo.dart
+import 'package:frontend_organizador/models/jugador.dart';
 
 class Equipo {
   final String id;
@@ -6,7 +7,9 @@ class Equipo {
   final String estado;
   final DateTime fechaRegistro;
   final String? capitanNombre;
-  final List<Jugador> jugadores; // ✅ Agregar esta línea
+  final String? capitanTelefono;
+  final String? torneoId;
+  final List<Jugador> jugadores;
 
   Equipo({
     required this.id,
@@ -14,7 +17,9 @@ class Equipo {
     required this.estado,
     required this.fechaRegistro,
     this.capitanNombre,
-    required this.jugadores, // ✅ Requerido
+    this.capitanTelefono,
+    this.torneoId,
+    required this.jugadores,
   });
 
   factory Equipo.fromJson(Map<String, dynamic> json) {
@@ -22,6 +27,10 @@ class Equipo {
     final String? nombreCapitan = capitanData is Map
         ? capitanData['nombre']?.toString()
         : json['capitanNombre']?.toString();
+
+    final String? telefonoCapitan = capitanData is Map
+        ? capitanData['telefono']?.toString()
+        : json['capitanTelefono']?.toString();
 
     final List<dynamic> jugadoresJson = json['jugadores'] ?? [];
     final List<Jugador> jugadores = jugadoresJson.map((j) => Jugador.fromJson(j)).toList();
@@ -32,6 +41,8 @@ class Equipo {
       estado: json['estado'] ?? 'pendiente',
       fechaRegistro: DateTime.tryParse(json['fechaRegistro'] ?? '') ?? DateTime.now(),
       capitanNombre: nombreCapitan ?? 'Sin capitán',
+      capitanTelefono: telefonoCapitan,
+      torneoId: json['torneoId'] ?? json['torneo_id'],
       jugadores: jugadores,
     );
   }
@@ -43,26 +54,9 @@ class Equipo {
       'estado': estado,
       'fechaRegistro': fechaRegistro.toIso8601String(),
       'capitanNombre': capitanNombre,
+      'capitanTelefono': capitanTelefono,
+      'torneoId': torneoId,
       'jugadores': jugadores.map((j) => j.toJson()).toList(),
-    };
-  }
-}
-
-// Clase Jugador
-class Jugador {
-  final String nombre;
-
-  Jugador({required this.nombre});
-
-  factory Jugador.fromJson(Map<String, dynamic> json) {
-    return Jugador(
-      nombre: json['nombre'] ?? 'Sin nombre',
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'nombre': nombre,
     };
   }
 }

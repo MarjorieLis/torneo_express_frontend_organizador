@@ -20,9 +20,9 @@ class _GestionEquiposScreenState extends State<GestionEquiposScreen> {
 
   Future<void> _cargarEquiposPendientes() async {
     try {
-      final data = await ApiService.getEquiposPorEstado('pendiente');
+      final equipos = await ApiService.getEquiposPorEstado('pendiente');
       setState(() {
-        equipos = List<Equipo>.from(data.map((json) => Equipo.fromJson(json)));
+        this.equipos = equipos;
         isLoading = false;
       });
     } catch (e) {
@@ -33,14 +33,34 @@ class _GestionEquiposScreenState extends State<GestionEquiposScreen> {
     }
   }
 
-  Future<void> _cambiarEstadoEquipo(String id, String nuevoEstado) async {
-    final response = await ApiService.actualizarEstadoEquipo(id, nuevoEstado);
+  Future<void> _aprobarEquipo(String id) async {
+    final response = await ApiService.actualizarEstadoEquipo(id, 'aprobado');
     if (response['success'] == true) {
       setState(() {
         equipos.removeWhere((e) => e.id == id);
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Equipo $nuevoEstado")),
+        SnackBar(content: Text("✅ Equipo aprobado")),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Error: ${response['message'] ?? 'Desconocido'}")),
+      );
+    }
+  }
+
+  Future<void> _rechazarEquipo(String id) async {
+    final response = await ApiService.actualizarEstadoEquipo(id, 'rechazado');
+    if (response['success'] == true) {
+      setState(() {
+        equipos.removeWhere((e) => e.id == id);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Equipo rechazado")),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Error: ${response['message'] ?? 'Desconocido'}")),
       );
     }
   }
@@ -48,13 +68,11 @@ class _GestionEquiposScreenState extends State<GestionEquiposScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Aprobar Equipos"),
-      ),
+      appBar: AppBar(title: Text("Gestión de Equipos")),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : equipos.isEmpty
-              ? Center(child: Text("No hay equipos pendientes de aprobación"))
+              ? Center(child: Text("No hay equipos pendientes"))
               : ListView.builder(
                   itemCount: equipos.length,
                   itemBuilder: (context, index) {
@@ -62,7 +80,7 @@ class _GestionEquiposScreenState extends State<GestionEquiposScreen> {
                     return Card(
                       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: Padding(
-                        padding: EdgeInsets.all(12),
+                        padding: EdgeInsets.all(16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -72,6 +90,8 @@ class _GestionEquiposScreenState extends State<GestionEquiposScreen> {
                             ),
                             SizedBox(height: 4),
                             Text("Registrado: ${equipo.fechaRegistro.day}/${equipo.fechaRegistro.month}/${equipo.fechaRegistro.year}"),
+                            if (equipo.capitanNombre != null)
+                              Text("Capitán: ${equipo.capitanNombre}"),
                             SizedBox(height: 12),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
@@ -79,12 +99,13 @@ class _GestionEquiposScreenState extends State<GestionEquiposScreen> {
                                 TextButton.icon(
                                   icon: Icon(Icons.check, color: Colors.green),
                                   label: Text("Aprobar"),
-                                  onPressed: () => _cambiarEstadoEquipo(equipo.id, 'aprobado'),
+                                  onPressed: () => _aprobarEquipo(equipo.id),
                                 ),
+                                SizedBox(width: 8),
                                 TextButton.icon(
                                   icon: Icon(Icons.close, color: Colors.red),
                                   label: Text("Rechazar"),
-                                  onPressed: () => _cambiarEstadoEquipo(equipo.id, 'rechazado'),
+                                  onPressed: () => _rechazarEquipo(equipo.id),
                                 ),
                               ],
                             ),

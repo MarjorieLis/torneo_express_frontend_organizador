@@ -25,12 +25,12 @@ class _HistorialTorneosScreenState extends State<HistorialTorneosScreen> {
   }
 
   Future<void> _cargarTorneos() async {
-    final data = await ApiService.getTorneosPasados();
-    final torneosList = List<Torneo>.from(data.map((json) => Torneo.fromJson(json)));
-    setState(() {
-      torneos = torneosList;
-      torneosFiltrados = torneosList;
-    });
+    //final data = await ApiService.getTorneosPasados();
+    //final torneosList = List<Torneo>.from(data.map((json) => Torneo.fromJson(json)));
+    //setState(() {
+      //torneos = torneosList;
+      //torneosFiltrados = torneosList;
+    //});
   }
 
   void _aplicarFiltros() {

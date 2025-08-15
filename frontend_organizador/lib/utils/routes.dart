@@ -9,13 +9,12 @@ import 'package:frontend_organizador/screens/organizador/home_organizador_screen
 import 'package:frontend_organizador/screens/organizador/crear_torneo_screen.dart';
 import 'package:frontend_organizador/screens/organizador/gestion_equipos_screen.dart';
 import 'package:frontend_organizador/screens/organizador/historial_torneos_screen.dart';
-import 'package:frontend_organizador/screens/organizador/notificaciones_screen.dart';
-import 'package:frontend_organizador/screens/organizador/estadisticas_screen.dart';
 import 'package:frontend_organizador/screens/organizador/programar_partidos_screen.dart';
 import 'package:frontend_organizador/screens/organizador/torneos_screen.dart';
 import 'package:frontend_organizador/screens/organizador/editar_torneo_screen.dart';
 import 'package:frontend_organizador/screens/organizador/detalle_torneo_screen.dart';
-import 'package:frontend_organizador/screens/organizador/equipos_aprobados_screen.dart'; // ✅ Importa la pantalla
+import 'package:frontend_organizador/screens/organizador/equipos_aprobados_screen.dart';
+import 'package:frontend_organizador/screens/jugador/home_jugador_screen.dart';
 
 class Routes {
   // Autenticación
@@ -38,7 +37,7 @@ class Routes {
   static const String notificaciones = '/notificaciones';
   static const String estadisticas = '/estadisticas';
   static const String historial = '/historial';
-  static const String equiposAprobados = '/equipos-aprobados'; // ✅ Nueva ruta
+  static const String equiposAprobados = '/equipos-aprobados';
 
   // === RUTAS ===
   static Map<String, Widget Function(BuildContext)> get routes {
@@ -49,12 +48,11 @@ class Routes {
       registerOrganizador: (context) => RegisterOrganizadorScreen(),
       registerJugador: (context) => RegisterJugadorScreen(),
       home: (context) => HomeOrganizadorScreen(),
+      homeJugador: (context) => HomeJugadorScreen(), // ✅ Agregado
       crearTorneo: (context) => CrearTorneoScreen(),
       gestionEquipos: (context) => GestionEquiposScreen(),
-      notificaciones: (context) => NotificacionesScreen(),
-      estadisticas: (context) => EstadisticasScreen(),
       historial: (context) => HistorialTorneosScreen(),
-      equiposAprobados: (context) => EquiposAprobadosScreen(), // ✅ Añadida
+      equiposAprobados: (context) => EquiposAprobadosScreen(),
     };
   }
 }
