@@ -134,6 +134,7 @@ class _InscripcionEquipoScreenState extends State<InscripcionEquipoScreen> {
     final capitanId = await AuthService.getUserId();
     if (capitanId == null) return;
 
+    // ✅ Enviar todos los datos, incluyendo jugadores, en la creación del equipo
     final cuerpo = jsonEncode({
       'nombre': nombre,
       'torneoId': widget.torneo.id,
@@ -141,17 +142,18 @@ class _InscripcionEquipoScreenState extends State<InscripcionEquipoScreen> {
       'capitanNombre': capitanNombre,
       'capitanTelefono': telefono,
       'jugadorIds': jugadoresSeleccionados.map((j) => j.id).toList(),
+      'estado': 'pendiente'
     });
 
     final response = await ApiService.crearEquipo(cuerpo);
     if (response['success'] == true) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("✅ Equipo inscrito")),
+        SnackBar(content: Text("✅ Equipo inscrito correctamente")),
       );
       Navigator.pop(context, true);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(response['message'] ?? "Error")),
+        SnackBar(content: Text(response['message'] ?? "Error al inscribir equipo")),
       );
     }
   }
@@ -167,7 +169,6 @@ class _InscripcionEquipoScreenState extends State<InscripcionEquipoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final txt = Theme.of(context).textTheme;
 
     return Scaffold(
@@ -212,7 +213,12 @@ class _InscripcionEquipoScreenState extends State<InscripcionEquipoScreen> {
                           onPressed: () async {
                             final seleccion = await Navigator.push<List<Jugador>>(
                               context,
-                              MaterialPageRoute(builder: (_) => SeleccionarJugadoresScreen(equipoId: 'temp')),
+                              MaterialPageRoute(
+                                builder: (_) => SeleccionarJugadoresScreen(
+                                  jugadoresDisponibles: jugadoresDisponibles,
+                                  jugadoresSeleccionados: jugadoresSeleccionados,
+                                ),
+                              ),
                             );
                             if (seleccion != null) {
                               setState(() => jugadoresSeleccionados = seleccion);
@@ -227,7 +233,15 @@ class _InscripcionEquipoScreenState extends State<InscripcionEquipoScreen> {
                     if (jugadoresSeleccionados.isEmpty)
                       Text("No has seleccionado jugadores.")
                     else
-                      Wrap(spacing: 8, children: jugadoresSeleccionados.map((j) => InputChip(label: Text(j.nombreCompleto), onDeleted: () => setState(() => jugadoresSeleccionados.remove(j)))).toList()),
+                      Wrap(
+                        spacing: 8,
+                        children: jugadoresSeleccionados
+                            .map((j) => InputChip(
+                                  label: Text(j.nombreCompleto),
+                                  onDeleted: () => setState(() => jugadoresSeleccionados.remove(j)),
+                                ))
+                            .toList(),
+                      ),
                     const SizedBox(height: 28),
                     FilledButton.icon(
                       onPressed: _enviarInscripcion,

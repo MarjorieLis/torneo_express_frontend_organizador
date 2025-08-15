@@ -1,3 +1,4 @@
+// screens/organizador/torneos_screen.dart
 import 'package:flutter/material.dart';
 import 'package:frontend_organizador/services/api_service.dart';
 import 'package:frontend_organizador/models/torneo.dart';
@@ -12,6 +13,7 @@ class TorneosScreen extends StatefulWidget {
 class _TorneosScreenState extends State<TorneosScreen> {
   List<Torneo> torneos = [];
   bool _loading = true;
+  String _error = '';
 
   @override
   void initState() {
@@ -20,12 +22,25 @@ class _TorneosScreenState extends State<TorneosScreen> {
   }
 
   Future<void> _cargarTorneos() async {
-    setState(() => _loading = true);
-    final lista = await ApiService.getTorneos();
     setState(() {
-      torneos = lista;
-      _loading = false;
+      _loading = true;
+      _error = '';
     });
+
+    try {
+      final lista = await ApiService.getTorneos();
+      print('✅ Torneos cargados: ${lista.length} torneos');
+      setState(() {
+        torneos = lista;
+        _loading = false;
+      });
+    } catch (e, stack) {
+      print('❌ Error al cargar torneos: $e\n$stack');
+      setState(() {
+        _error = 'Error de conexión: $e';
+        _loading = false;
+      });
+    }
   }
 
   @override
@@ -33,36 +48,37 @@ class _TorneosScreenState extends State<TorneosScreen> {
     return Scaffold(
       appBar: AppBar(title: Text("Todos los Torneos")),
       body: _loading
-          ? Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                // ✅ Resumen rápido de torneos (como en la imagen 2)
-                _buildQuickStats(),
-                SizedBox(height: 24),
-                // Lista de torneos
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: torneos.length,
-                    itemBuilder: (context, index) {
-                      final torneo = torneos[index];
-                      return _buildTorneoCard(torneo);
-                    },
-                  ),
-                ),
-              ],
-            ),
+          ? const Center(child: CircularProgressIndicator())
+          : _error.isNotEmpty
+              ? Center(child: Text("Error: $_error"))
+              : torneos.isEmpty
+                  ? const Center(child: Text("No hay torneos creados"))
+                  : Column(
+                      children: [
+                        _buildQuickStats(),
+                        const SizedBox(height: 24),
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: torneos.length,
+                            itemBuilder: (context, index) {
+                              final torneo = torneos[index];
+                              return _buildTorneoCard(torneo);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
     );
   }
 
-  // ✅ Resumen rápido: activos, suspendidos, finalizados
   Widget _buildQuickStats() {
     int activos = torneos.where((t) => t.estado == 'activo').length;
     int suspendidos = torneos.where((t) => t.estado == 'suspendido').length;
     int cancelados = torneos.where((t) => t.estado == 'cancelado').length;
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16),
-      padding: EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -89,7 +105,7 @@ class _TorneosScreenState extends State<TorneosScreen> {
     return Column(
       children: [
         Icon(icon, color: color, size: 28),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         Text(label, style: TextStyle(fontSize: 12, color: Colors.grey)),
       ],
@@ -107,17 +123,23 @@ class _TorneosScreenState extends State<TorneosScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ✅ Icono de disciplina
                 CircleAvatar(
                   radius: 24,
                   backgroundColor: _getStatusColor(torneo.estado),
                   child: Text(
-                    torneo.disciplina[0].toUpperCase(),
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                    torneo.estado == 'activo' && torneo.disciplina.isNotEmpty
+                        ? torneo.disciplina[0].toUpperCase()
+                        : torneo.estado == 'suspendido'
+                            ? '⏸'
+                            : '❌',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 SizedBox(width: 16),
-                // ✅ Información del torneo
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,7 +162,6 @@ class _TorneosScreenState extends State<TorneosScreen> {
                     ],
                   ),
                 ),
-                // ✅ Botón de más opciones
                 PopupMenuButton<String>(
                   onSelected: (opcion) {
                     if (opcion == 'editar') {
@@ -171,7 +192,6 @@ class _TorneosScreenState extends State<TorneosScreen> {
               ],
             ),
           ),
-          // ✅ Badge de estado (suspendido/cancelado)
           if (torneo.estado != 'activo')
             Positioned(
               top: 12,
@@ -192,7 +212,6 @@ class _TorneosScreenState extends State<TorneosScreen> {
                 ),
               ),
             ),
-          // ✅ Hacer clic en toda la tarjeta para ver detalles
           Positioned.fill(
             child: Material(
               color: Colors.transparent,
@@ -245,7 +264,6 @@ class _TorneosScreenState extends State<TorneosScreen> {
     }
   }
 
-  // ✅ Confirmación antes de cancelar
   Future<void> _confirmarCancelacion(String id) async {
     final confirmado = await showDialog(
       context: context,

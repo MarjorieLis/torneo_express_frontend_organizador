@@ -1,123 +1,125 @@
-// screens/organizador/seleccionar_jugadores_screen.dart
+// screens/jugador/seleccionar_jugadores_screen.dart
 import 'package:flutter/material.dart';
 import 'package:frontend_organizador/models/jugador.dart';
-import 'package:frontend_organizador/services/api_service.dart';
 
 class SeleccionarJugadoresScreen extends StatefulWidget {
-  final String equipoId;
+  final List<Jugador> jugadoresDisponibles;
+  final List<Jugador> jugadoresSeleccionados;
 
-  const SeleccionarJugadoresScreen({Key? key, required this.equipoId}) : super(key: key);
+  const SeleccionarJugadoresScreen({
+    Key? key,
+    required this.jugadoresDisponibles,
+    required this.jugadoresSeleccionados,
+  }) : super(key: key);
 
   @override
   _SeleccionarJugadoresScreenState createState() => _SeleccionarJugadoresScreenState();
 }
 
 class _SeleccionarJugadoresScreenState extends State<SeleccionarJugadoresScreen> {
-  List<Jugador> jugadoresDisponibles = [];
-  List<Jugador> jugadoresFiltrados = []; // ✅ Declarado
-  List<String> jugadoresSeleccionados = [];
-  bool _loading = true;
+  List<Jugador> jugadoresSeleccionados = [];
+  late List<Jugador> jugadoresFiltrados;
 
   @override
   void initState() {
     super.initState();
-    _cargarJugadoresDisponibles();
-  }
-
-  Future<void> _cargarJugadoresDisponibles() async {
-    setState(() => _loading = true);
-    try {
-      final List<Jugador> jugadores = await ApiService.obtenerJugadoresDisponibles();
-      setState(() {
-        jugadoresDisponibles = jugadores;
-        jugadoresFiltrados = jugadores;
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error de conexión")),
-      );
-    } finally {
-      setState(() => _loading = false);
-    }
+    jugadoresSeleccionados = List.from(widget.jugadoresSeleccionados);
+    jugadoresFiltrados = List.from(widget.jugadoresDisponibles);
   }
 
   void _seleccionarJugador(Jugador jugador) {
     setState(() {
-      if (jugadoresSeleccionados.contains(jugador.id)) {
-        jugadoresSeleccionados.remove(jugador.id);
+      if (jugadoresSeleccionados.contains(jugador)) {
+        jugadoresSeleccionados.remove(jugador);
       } else {
-        jugadoresSeleccionados.add(jugador.id);
+        jugadoresSeleccionados.add(jugador);
       }
     });
   }
 
-  Future<void> _confirmarSeleccion() async {
+  void _confirmarSeleccion() {
     if (jugadoresSeleccionados.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Selecciona al menos un jugador")),
       );
       return;
     }
-
-    final response = await ApiService.asignarJugadoresAlEquipo(widget.equipoId, jugadoresSeleccionados);
-    if (response['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Jugadores asignados correctamente")),
-      );
-      Navigator.pop(context, jugadoresSeleccionados);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(response['message'] ?? "Error al asignar jugadores")),
-      );
-    }
+    Navigator.pop(context, jugadoresSeleccionados);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Seleccionar Jugadores")),
-      body: _loading
-          ? Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                TextField(
-                  decoration: InputDecoration(hintText: "Buscar por nombre, cédula o correo"),
-                  onChanged: (query) {
-                    setState(() {
-                      jugadoresFiltrados = jugadoresDisponibles
-                          .where((j) =>
-                              j.nombreCompleto.toLowerCase().contains(query.toLowerCase()) ||
-                              j.cedula.contains(query) ||
-                              j.email.toLowerCase().contains(query.toLowerCase()))
-                          .toList();
-                    });
-                  },
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: jugadoresFiltrados.length,
-                    itemBuilder: (context, index) {
-                      final jugador = jugadoresFiltrados[index];
-                      return CheckboxListTile(
-                        title: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(jugador.nombreCompleto),
-                            Text("${jugador.cedula} - ${jugador.posicionPrincipal}"),
-                          ],
-                        ),
-                        value: jugadoresSeleccionados.contains(jugador.id),
-                        onChanged: (value) => _seleccionarJugador(jugador),
-                      );
-                    },
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: _confirmarSeleccion,
-                  child: Text("Confirmar"),
-                ),
-              ],
+      appBar: AppBar(
+        title: Text("Seleccionar Jugadores"),
+        // ✅ Botón en la derecha del appBar
+        actions: [
+          TextButton(
+            onPressed: _confirmarSeleccion,
+            child: Text(
+              "Confirmar (${jugadoresSeleccionados.length})",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
+          ),
+          SizedBox(width: 8),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Campo de búsqueda
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: "Buscar por nombre, cédula o correo",
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (query) {
+                setState(() {
+                  jugadoresFiltrados = widget.jugadoresDisponibles
+                      .where((j) =>
+                          j.nombreCompleto.toLowerCase().contains(query.toLowerCase()) ||
+                          j.cedula.contains(query) ||
+                          j.email.toLowerCase().contains(query.toLowerCase()))
+                      .toList();
+                });
+              },
+            ),
+          ),
+          // Lista de jugadores
+          Expanded(
+            child: ListView.builder(
+              itemCount: jugadoresFiltrados.length,
+              itemBuilder: (context, index) {
+                final jugador = jugadoresFiltrados[index];
+                return CheckboxListTile(
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(jugador.nombreCompleto, style: TextStyle(fontSize: 16)),
+                      Text("${jugador.cedula} - ${jugador.posicionPrincipal}", style: TextStyle(fontSize: 14, color: Colors.grey)),
+                    ],
+                  ),
+                  value: jugadoresSeleccionados.contains(jugador),
+                  onChanged: (value) => _seleccionarJugador(jugador),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+      // ✅ Botón de confirmar en la parte inferior (opcional, para mayor visibilidad)
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _confirmarSeleccion,
+        label: Text("Confirmar (${jugadoresSeleccionados.length})"),
+        icon: Icon(Icons.check),
+        backgroundColor: Colors.green,
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }
